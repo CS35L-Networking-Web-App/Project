@@ -83,7 +83,7 @@ const SignInForm = () =>{
       <button
       type="submit"
       className="w-full text-white bg-blue-600 hover:bg-blue-700 rounded-lg px-5 py-2.5"
-      disabled={isSubmitting || success}
+      disabled={isSubmitting}
       >Sign in</button>
      </form>  
   );
