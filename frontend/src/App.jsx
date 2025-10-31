@@ -1,5 +1,7 @@
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { formSchema } from "./utilities";
 
 export default function App(){
   return(
@@ -30,7 +32,7 @@ const SignInForm = () =>{
     formState:{errors, isSubmitting},
     setValue,
     setError, 
-  } = useForm(); 
+  } = useForm({resolver: zodResolver(formSchema)}); 
 
   const onSubmit = async({email, password}) => {
 
@@ -60,7 +62,7 @@ const SignInForm = () =>{
         className="text-black mb-1 font-medium text-gray-900"
         >Email</label>
         <input
-        {...register("email",{required: "Please enter an email address."})}
+        {...register("email")}
         id="email"
         type="email"
         placeholder="Email..."
@@ -73,7 +75,7 @@ const SignInForm = () =>{
         className="block mb-1 font-medium text-gray-900"
         >Password</label>
         <input
-        {...register("password",{required: "Please enter a password.", minLength:{value: 8, message: "Password must be at least 8 characters long",},})}
+        {...register("password")}
         id="password"
         type="password"
         placeholder="Password..."
