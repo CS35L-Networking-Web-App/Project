@@ -8,10 +8,14 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
 
 app.use('/api/auth', authRoutes);
+
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(err.status || 500).json('Internal server error');
+});
 
 const port = Number(process.env.PORT) || 4000;
 

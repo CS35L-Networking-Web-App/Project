@@ -3,20 +3,25 @@ import { z } from 'zod';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import rateLimit from 'express-rate-limit';
 
 const router = Router();
 
 const registerSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8),
+  email: z.email(),
+  password: z.string()
+      .min(8)
+      .regex(/[A-Z]/, 'Must contain uppercase')
+      .regex(/[0-9]/, 'Must contain number')
+      .regex(/[^A-Za-z0-9]/, 'Must contain special character'),
   name: z.string().min(1).optional()
 });
 const loginSchema = z.object({
-  email: z.string().email(),
+  email: z.email(),
   password: z.string().min(8)
 });
 const verifySchema = z.object({
-  email: z.string().email(),
+  email: z.email(),
   code: z.string().length(6)
 });
 
@@ -24,8 +29,16 @@ function genCode() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { error: 'Too many attempts, try again later' },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
 // Sign Up
-router.post('/register', async (req, res) => {
+router.post('/register', authLimiter, async (req, res) => {
   const parsed = registerSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
 
@@ -49,7 +62,7 @@ router.post('/register', async (req, res) => {
 });
 
 // Email Verification
-router.post('/verify', async (req, res) => {
+router.post('/verify', authLimiter, async (req, res) => {
   const parsed = verifySchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
 
@@ -75,7 +88,7 @@ router.post('/verify', async (req, res) => {
 });
 
 // Login
-router.post('/login', async (req, res) => {
+router.post('/login', authLimiter, async (req, res) => {
   const parsed = loginSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
 
