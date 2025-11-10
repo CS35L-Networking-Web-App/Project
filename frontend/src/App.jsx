@@ -2,6 +2,7 @@ import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { formSchema } from "./utilities";
+import { loginUser } from "./api.js";
 
 export default function App(){
   return(
@@ -34,22 +35,21 @@ const SignInForm = () =>{
     setError, 
   } = useForm({resolver: zodResolver(formSchema)}); 
 
-  const onSubmit = async({email, password}) => {
+ const onSubmit = async ({ email, password }) => {
+  try {
+    console.log("Form Submitted:", { email, password });
+    const data = await loginUser(email, password);
+    console.log("Login success:", data);
 
-    try{
-      console.log("Form Submitted:", {email, password});
-      const response = await fetch("https://jsonplaceholder.typicode.com/posts",{
-      method: "POST",
-      headers: {"Content-Type": "application/json",},
-      body: JSON.stringify({email, password}),
-      });
-
-    if (!response.ok) throw new Error("Failed to submit data.");
-    setValue("email", "");
-    setValue("password","");
-  } catch (error){
-    setError("root", { message: "Data could not be submitted."});
-  }};
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("user", JSON.stringify(data.user));
+    alert("Login successful!");
+    
+  } catch (error) {
+    console.error(error);
+    setError("root", { message: error.message });
+  }
+};
   
   return (
      <form

@@ -3,6 +3,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { formSchema } from "./utilities";
+import { registerUser } from "./api.js";
+
 
 export default function SignUp(){
 

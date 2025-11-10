@@ -32,9 +32,12 @@ bower_components
 
 *.sublime*
 
+# design
 psd
 thumb
 sketch
+
+# env
 backend/.env
-backend/.env
-backend/.env
+frontend/.env
+.env
