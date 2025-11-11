@@ -14,7 +14,12 @@ const registerSchema = z.object({
       .regex(/[A-Z]/, 'Must contain uppercase')
       .regex(/[0-9]/, 'Must contain number')
       .regex(/[^A-Za-z0-9]/, 'Must contain special character'),
+  confirmPassword: z.string(),
   name: z.string().min(1).optional()
+})
+.refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
 });
 const loginSchema = z.object({
   email: z.email(),
@@ -94,12 +99,12 @@ router.post('/login', authLimiter, async (req, res) => {
 
   const { email, password } = parsed.data;
   const user = await User.findOne({ email });
-  if (!user) return res.status(401).json({ error: 'Invalid credentials' });
+  if (!user) return res.status(401).json({ error: 'Invalid Email or Password' });
 
   const ok = await bcrypt.compare(password, user.passwordHash);
-  if (!ok) return res.status(401).json({ error: 'Invalid credentials' });
+  if (!ok) return res.status(401).json({ error: 'Invalid Email or Password' });
 
-  if (!user.isVerified) return res.status(403).json({ error: 'Email not verified' });
+ // if (!user.isVerified) return res.status(403).json({ error: 'Email not verified' });
 
   const token = jwt.sign({}, process.env.JWT_SECRET, { subject: user.id, expiresIn: '7d' });
   res.json({ token, user: { id: user.id, email: user.email, name: user.name } });
