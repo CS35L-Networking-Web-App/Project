@@ -1,0 +1,148 @@
+@import "tailwindcss";
+
+.container {
+    padding: 10px;
+    background-color: white;
+    border-radius: 8px;
+    margin-bottom: 10px;
+   
+  }
+
+  .headerContainer{
+    margin-bottom: 10px;
+    background-color: white;
+    border-radius: 8px;
+  }
+
+  .headerContent {
+    padding: 10px;
+  }
+
+  .header{
+    flex-direction: row;
+    align-items: center;
+    display: flex;
+    padding: 10px;
+}
+
+  .title{
+    font-size: 20px;
+    font-weight:600;
+    margin-left: 15px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+  }
+
+  .subtitle{
+    font-size: 18px;
+    font-weight:600;
+    margin-left: 15px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+  }
+
+  .name{
+    font-size: 24px;
+    font-weight: 600;
+    color:black;
+    margin-left: 15px;
+  }
+
+  .regular{
+    font-size: 18px;
+    font-weight: 400;
+    color:black;
+    margin-left: 15px;
+    max-width: 500px;
+  }
+
+  .backImage {
+    width: 100%;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    height: 150px;
+    background-color: #005E93;
+    margin-bottom: -60px;
+  }
+
+  .image{
+    width: 100px;
+    aspect-ratio: 1;
+    border-radius: 100px;
+    border: 1px solid black;
+    margin-bottom: 7px;
+    margin-left: 13px;
+    overflow: hidden;
+  }
+
+   .image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; 
+}
+
+.profile_list{
+    font-size: 24px;
+    font-weight: 550;
+    color:black;
+    margin-left: 15px;
+    max-width: 500px;
+  }
+
+.item{
+    padding:5px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid;
+    border-color: lightgrey;
+    background-color: white;
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .profileItem{
+    padding:10px;
+    background-color: white;
+    display:flex;
+    border-radius:8px;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+
+  .list_image{
+    width: 55px;
+    aspect-ratio: 1;
+    border-radius: 55px;
+    border: 1px solid black;
+    margin-bottom: 7px;
+    margin-left: 13px;
+    overflow: hidden;
+  }
+
+  .list_image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; 
+}
+
+.postText{
+margin-top: 0;
+margin-left: 14px;
+color:black;
+padding: 10px;
+padding-bottom: 20px;
+border-bottom: 1px solid;
+border-bottom-color: lightgrey;
+}
+
+.bottom{
+flex-direction: 'row';
+display: flex;
+justify-content: flex-end;
+padding-block: 10;
+margin-right: 15px;
+margin-top: 5px;
+border-top-width: 1;
+border-color: lightgrey;
+}

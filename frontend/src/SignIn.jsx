@@ -2,11 +2,11 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { formSchema } from "./utilities";
+import { formSchema } from "./utilities.jsx";
 import { loginUser } from "./api.js";
 import { Eye, EyeOff } from "lucide-react";
 
-export default function App(){
+export default function SignIn(){
   return(
     <div className='flex items-center justify-center min-h-screen'>
       <div className='flex flex-col w-full max-w-xs mx-auto'>
@@ -28,6 +28,8 @@ const navigate = useNavigate();
 };
 
 const SignInForm = () =>{
+
+  const navigate = useNavigate();
 
   const{
     register,
@@ -51,6 +53,7 @@ const onSubmit = async ({ email, password }) => {
     localStorage.setItem("token", data.token);
     localStorage.setItem("user", JSON.stringify(data.user));
     alert("Login successful!");
+    navigate("/home");
     
   } catch (error) {
     console.error(error);
