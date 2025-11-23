@@ -6,7 +6,9 @@ const UserSchema = new mongoose.Schema({
   name: { type: String },
   isVerified: { type: Boolean, default: false },
   verificationCode: { type: String },
-  verificationExpiresAt: { type: Date }
+  verificationExpiresAt: { type: Date },
+  followers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  following: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
 }, { timestamps: true });
 
 export default mongoose.model('User', UserSchema);
