@@ -7,9 +7,12 @@ import userRoutes from './routes/users.js';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 
 const app = express();
-// allow frontend (localhost:5173) to access backend (localhost:4000)
+// allow frontend dev servers to access backend
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173"
+  ],
   credentials: true,
 }));
 

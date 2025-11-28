@@ -1,4 +1,4 @@
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -34,7 +34,25 @@ export default function SignUp(){
     handleSubmit, 
     formState:{errors, isSubmitting},
     setError, 
-  } = useForm({resolver: zodResolver(formSchema)}); 
+    control,
+  } = useForm({
+    resolver: zodResolver(formSchema),
+    mode: "onChange",
+    reValidateMode: "onChange",
+  }); 
+ 
+ const passwordValue = useWatch({ control, name: "password", defaultValue: "" }) || "";
+ const confirmValue = useWatch({ control, name: "confirmPassword", defaultValue: "" }) || "";
+
+ const passwordChecks = [
+  { label: "At least 8 characters", ok: passwordValue.length >= 8 },
+  { label: "Contains uppercase letter", ok: /[A-Z]/.test(passwordValue) },
+  { label: "Contains number", ok: /[0-9]/.test(passwordValue) },
+  { label: "Contains special character", ok: /[^A-Za-z0-9]/.test(passwordValue) },
+  { label: "Passwords match", ok: confirmValue.length > 0 && passwordValue === confirmValue },
+ ];
+ const statusColor = (ok) => ok ? "text-green-600" : "text-red-600";
+ const statusIcon = (ok) => ok ? "✓" : "✗";
 
  const onSubmit = async ({ email, password, confirmPassword}) => {
   try {
@@ -90,7 +108,7 @@ export default function SignUp(){
         className={`bg-gray-50 border text-gray-900 rounded-lg focus:border-primary-600 block w-full p-2.5 ${errors.password 
           ? "border-red-500 focus:ring-red-500" 
           : "border-gray-300 focus:ring-primary-600"}`}
-        />{errors.password && <p className="text-red-500">{errors.password.message}</p>}
+        />
         <button
           type="button"
           onClick={() => setShowPassword((prev) => !prev)}
@@ -99,6 +117,13 @@ export default function SignUp(){
         >
           {showPassword ? <EyeOff size={23} /> : <Eye size={23} />}
         </button>
+        <div className="mt-2 text-sm space-y-1">
+          {passwordChecks.map((rule) => (
+            <div key={rule.label} className={statusColor(rule.ok)}>
+              {statusIcon(rule.ok)} {rule.label}
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Confirm Password */}
@@ -118,12 +143,11 @@ export default function SignUp(){
                 : "border-gray-300 focus:ring-primary-600" }`}/>
           <button
             type="button"
-            onClick={() => setShowConfirmPassword((prev) => !prev)}
-            className="absolute top-10.5 -translate-y-1 right-3 text-gray-500 hover:text-gray-700"
-            tabIndex={-1}>
+          onClick={() => setShowConfirmPassword((prev) => !prev)}
+          className="absolute top-10.5 -translate-y-1 right-3 text-gray-500 hover:text-gray-700"
+          tabIndex={-1}>
             {showConfirmPassword ? <EyeOff size={23} /> : <Eye size={23} />}
           </button>
-          {errors.confirmPassword && (<p className="text-red-500">{errors.confirmPassword.message}</p>)}
         </div>
 
       {/* Message */}
