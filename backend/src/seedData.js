@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt';
-import User from './models/User.js';
-import Post from './models/Post.js';
+import User from './models/user.js';
+import Post from './models/post.js';
 
 // used ChatGPT to generate JSON test data
 const testUsers = [
