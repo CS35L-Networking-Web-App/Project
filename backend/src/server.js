@@ -48,10 +48,19 @@ async function start() {
         let mongod = await MongoMemoryServer.create();
         mongoUri = mongod.getUri();
         console.info('Using in-memory MongoDB');
+
+        // Auto-seed the database when using in-memory
+        await mongoose.connect(mongoUri, { autoIndex: true });
+        console.log('MongoDB connected');
+
+        // Import and run seeding
+        const { seedTestData } = await import('./seedData.js');
+        await seedTestData();
+    } else {
+        await mongoose.connect(mongoUri, { autoIndex: true });
+        console.log('MongoDB connected');
     }
 
-  await mongoose.connect(mongoUri, { autoIndex: true });
-  console.log('MongoDB connected');
   app.listen(port, () => console.log(`API listening on :${port}`));
 }
 start().catch(err => {

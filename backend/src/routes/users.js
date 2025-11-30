@@ -107,6 +107,10 @@ router.get('/:userId', authenticate, async (req, res) => {
       return res.status(401).json({ error: 'Authenticated user not found' });
     }
 
+    const isConnection = currentUser.connections.some(id => id.toString() === req.params.userId);
+    const hasPendingRequest = user.connectionRequests.some(req => req.from.toString() === currentUser._id.toString());
+    const hasReceivedRequest = currentUser.connectionRequests.some(req => req.from.toString() === user._id.toString());
+
     res.json({
       id: user._id,
       email: user.email,
@@ -120,7 +124,10 @@ router.get('/:userId', authenticate, async (req, res) => {
       profilePicture: user.profilePicture,
       followersCount: user.followers.length,
       followingCount: user.following.length,
-      isFollowing: currentUser.following.some(id => id.toString() === req.params.userId)
+      isFollowing: currentUser.following.some(id => id.toString() === req.params.userId),
+      isConnection,
+      hasPendingRequest,
+      hasReceivedRequest
     });
   } catch (err) {
     res.status(500).json({ error: 'Server error' });

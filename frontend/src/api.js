@@ -98,6 +98,28 @@ export async function updateProfile(profileData) {
   return res.json();
 }
 
+// Get User by ID
+export async function getUserById(userId) {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    throw new Error('Not authenticated');
+  }
+
+  const res = await fetch(`${API_BASE}/api/users/${userId}`, {
+    method: "GET",
+    headers: {
+      "Authorization": `Bearer ${token}`
+    }
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => null);
+    throw new Error(extractErrorMessage(err, "Failed to fetch user"));
+  }
+
+  return res.json();
+}
+
 // Search/Get All Users
 export async function getAllUsers(searchQuery = '') {
   const token = localStorage.getItem('token');
