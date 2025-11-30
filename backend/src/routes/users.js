@@ -1,8 +1,45 @@
 import { Router } from 'express';
+import { z } from 'zod';
 import User from '../models/User.js';
 import { authenticate } from '../middleware/auth.js';
 
 const router = Router();
+
+const updateProfileSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  position: z.string().optional(),
+  about: z.string().optional(),
+  education: z.string().optional(),
+  skills: z.string().optional(),
+  profilePicture: z.string().optional()
+});
+
+router.get('/me', authenticate, async (req, res) => {
+  try {
+    const user = await User.findById(req.userId)
+      .select('-passwordHash -verificationCode -verificationExpiresAt')
+      .populate('followers', 'name email')
+      .populate('following', 'name email');
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({
+      id: user._id,
+      email: user.email,
+      name: user.name,
+      position: user.position,
+      about: user.about,
+      education: user.education,
+      skills: user.skills,
+      profilePicture: user.profilePicture,
+      followersCount: user.followers.length,
+      followingCount: user.following.length
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 
 router.get('/:userId', authenticate, async (req, res) => {
   try {
@@ -22,9 +59,50 @@ router.get('/:userId', authenticate, async (req, res) => {
       id: user._id,
       email: user.email,
       name: user.name,
+      position: user.position,
+      about: user.about,
+      education: user.education,
+      skills: user.skills,
+      profilePicture: user.profilePicture,
       followersCount: user.followers.length,
       followingCount: user.following.length,
       isFollowing: currentUser.following.some(id => id.toString() === req.params.userId)
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+router.patch('/me', authenticate, async (req, res) => {
+  try {
+    const parsed = updateProfileSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: parsed.error.flatten() });
+    }
+
+    const user = await User.findById(req.userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    if (parsed.data.name !== undefined) user.name = parsed.data.name;
+    if (parsed.data.position !== undefined) user.position = parsed.data.position;
+    if (parsed.data.about !== undefined) user.about = parsed.data.about;
+    if (parsed.data.education !== undefined) user.education = parsed.data.education;
+    if (parsed.data.skills !== undefined) user.skills = parsed.data.skills;
+    if (parsed.data.profilePicture !== undefined) user.profilePicture = parsed.data.profilePicture;
+
+    await user.save();
+
+    res.json({
+      id: user._id,
+      email: user.email,
+      name: user.name,
+      position: user.position,
+      about: user.about,
+      education: user.education,
+      skills: user.skills,
+      profilePicture: user.profilePicture
     });
   } catch (err) {
     res.status(500).json({ error: 'Server error' });

@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import {Box, Stack} from '@mui/material';
+import { useState, useEffect } from 'react'
+import {Box, Stack, CircularProgress} from '@mui/material';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import HomeIcon from '@mui/icons-material/Home';
@@ -7,20 +7,51 @@ import GroupsIcon from '@mui/icons-material/Groups';
 import PersonIcon from '@mui/icons-material/Person';
 import './styles.css';
 import {ProfileItem, Search, TabPanel} from './Items';
-import Profile from './Profile'                        
+import Profile from './Profile'
 import default_pfp from './assets/default_pfp.png';
-import Post from './Post';                       
-import NewPost from './newPost';               
+import Post from './Post';
+import NewPost from './newPost';
+import { getCurrentUser } from './api.js';
 
 
 function Home() {
   document.body.style.backgroundColor = '#dce6f1';
   const [value, setValue] = useState(0);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
   const handleChange = (event, newValue) => {setValue(newValue);};
-  const user ={name: "First Last",
-    about: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled",
-    position: "Position"}
-  const userPfp = default_pfp;
+
+  useEffect(() => {
+    async function loadUser() {
+      try {
+        const userData = await getCurrentUser();
+        setUser(userData);
+      } catch (err) {
+        console.error('Failed to load user:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadUser();
+  }, []);
+
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (!user) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+        <p>Failed to load user data. Please try logging in again.</p>
+      </Box>
+    );
+  }
+
+  const userPfp = user.profilePicture || default_pfp;
   
  
   return (
@@ -43,7 +74,13 @@ function Home() {
       </TabPanel>
       <TabPanel value={value} index={2}>
         <Stack direction="row" spacing={10} alignItems={'flex-start'}>
-          <Profile {...user} pic={userPfp}/>
+          <Profile
+            {...user}
+            pic={userPfp}
+            onProfileUpdate={(updatedProfile) => {
+              setUser({ ...user, ...updatedProfile });
+            }}
+          />
           <Stack direction="column" spacing={5} alignItems="stretch">
                <NewPost name={user.name} position={user.position} pic={userPfp}/>
                <Post name={user.name} text={user.about} position={user.position} pic={userPfp} liked={false}/>

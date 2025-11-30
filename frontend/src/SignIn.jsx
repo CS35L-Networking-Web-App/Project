@@ -52,7 +52,6 @@ const onSubmit = async ({ email, password }) => {
 
     localStorage.setItem("token", data.token);
     localStorage.setItem("user", JSON.stringify(data.user));
-    alert("Login successful!");
     navigate("/home");
     
   } catch (error) {

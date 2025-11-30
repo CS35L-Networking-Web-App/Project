@@ -8,14 +8,14 @@ import rateLimit from 'express-rate-limit';
 const router = Router();
 
 const registerSchema = z.object({
-  email: z.email(),
+  name: z.string().min(1, 'Name is required'),
+  email: z.string().email(),
   password: z.string()
       .min(8)
       .regex(/[A-Z]/, 'Must contain uppercase')
       .regex(/[0-9]/, 'Must contain number')
       .regex(/[^A-Za-z0-9]/, 'Must contain special character'),
-  confirmPassword: z.string(),
-  name: z.string().min(1).optional()
+  confirmPassword: z.string()
 })
 .refine((data) => data.password === data.confirmPassword, {
   message: "Passwords do not match",

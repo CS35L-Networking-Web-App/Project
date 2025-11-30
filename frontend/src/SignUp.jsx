@@ -7,14 +7,14 @@ import { z } from "zod";
 import { Eye, EyeOff } from "lucide-react";
 
 const formSchema = z.object({
-  email: z.email(),
+  name: z.string().min(1, 'Name is required'),
+  email: z.string().email(),
   password: z.string()
       .min(8)
       .regex(/[A-Z]/, 'Must contain uppercase')
       .regex(/[0-9]/, 'Must contain number')
       .regex(/[^A-Za-z0-9]/, 'Must contain special character'),
-  confirmPassword: z.string(),
-  name: z.string().min(1).optional()
+  confirmPassword: z.string()
 })
 .refine((data) => data.password === data.confirmPassword, {
   message: "Passwords do not match",
@@ -54,15 +54,15 @@ export default function SignUp(){
  const statusColor = (ok) => ok ? "text-green-600" : "text-red-600";
  const statusIcon = (ok) => ok ? "✓" : "✗";
 
- const onSubmit = async ({ email, password, confirmPassword}) => {
+ const onSubmit = async ({ name, email, password, confirmPassword}) => {
   try {
-    console.log("Sign-up Submitted:", { email, password, confirmPassword });
-    const result = await registerUser(email, password, confirmPassword);
+    console.log("Sign-up Submitted:", { name, email, password, confirmPassword });
+    const result = await registerUser(email, password, confirmPassword, name);
     console.log("Registered:", result);
 
     setSignUpMessage("Account created successfully!");
     setSuccess(true);
-    setTimeout(() => navigate("/"), 3000);
+    setTimeout(() => navigate("/"), 1000);
     
   } catch (error) {
     console.error(error);
@@ -78,6 +78,21 @@ export default function SignUp(){
      className="p-6 space-y-4 bg-white rounded-lg shadow w-full max-w-sm"
      onSubmit={handleSubmit(onSubmit)}>
       <h1 className="text-2xl font-semibold mb-4">Join now!</h1>
+
+      {/* Name */}
+      <div>
+        <label
+        htmlFor="name"
+        className="text-black mb-1 font-medium text-gray-900"
+        >Name</label>
+        <input
+        {...register("name")}
+        id="name"
+        type="text"
+        placeholder="Your name..."
+        className={`bg-gray-50 border text-gray-900 rounded-lg focus:border-primary-600 block w-full p-2.5 ${errors.name ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-primary-600"}`}
+        />{errors.name && <p className="text-red-500">{errors.name.message}</p>}
+      </div>
 
       {/* Email */}
       <div>

@@ -1,16 +1,43 @@
+import { useState } from 'react';
 import {Box, IconButton} from '@mui/material';
 import {ListItem} from './Items';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import EditProfileModal from './EditProfileModal';
 import './styles.css';
 
 export default function Profile(props){
+  const [modalOpen, setModalOpen] = useState(false);
+  const [profileData, setProfileData] = useState({
+    name: props.name || '',
+    position: props.position || '',
+    about: props.about || '',
+    education: props.education || '',
+    skills: props.skills || '',
+    profilePicture: props.profilePicture || ''
+  });
+
+  const handleProfileUpdate = (updatedProfile) => {
+    const newProfileData = {
+      name: updatedProfile.name || '',
+      position: updatedProfile.position || '',
+      about: updatedProfile.about || '',
+      education: updatedProfile.education || '',
+      skills: updatedProfile.skills || '',
+      profilePicture: updatedProfile.profilePicture || ''
+    };
+    setProfileData(newProfileData);
+    if (props.onProfileUpdate) {
+      props.onProfileUpdate(updatedProfile);
+    }
+  };
 
 return(
 <Box sx={{width:'50%', ml:4}}>
 <div className='profile'>
   <div className='headerContainer' style={{position: 'relative'}}>
         <div className='backImage'> </div>
-    <IconButton 
+    <IconButton
+        onClick={() => setModalOpen(true)}
         sx={{ color: '#000000ff', opacity: 0.45, position: 'absolute',
           top: 0,
           right: 0}}
@@ -19,42 +46,49 @@ return(
       </IconButton>
 
 
-    <div className='headerContent'> 
+    <div className='headerContent'>
       <div className='image' >
-        <img  src={props.pic}/>
+        <img src={(profileData.profilePicture && profileData.profilePicture.trim() !== '') ? profileData.profilePicture : props.pic}/>
       </div>
 
     <div className="name">
-    {props.name}
+    {profileData.name}
     </div >
 
     <div className='regular'>
-      {props.position}
+      {profileData.position}
     </div>
-  
+
     </div>
   </div>
 
 <div className='container'>
   <div className='title'> About </div>
-   <div className='regular'> {props.about} </div>
+   <div className='regular'> {profileData.about || 'No information provided'} </div>
 </div>
 
 <div className='container'>
   <div className='title'> Education </div>
-   <div className='regular'> education </div>
+   <div className='regular'> {profileData.education || 'No education information'} </div>
 </div>
 
 <div className='container'>
   <div className='title'> Experience </div>
   <ListItem title="Job" desc="desc"/>
-  <ListItem title="Job" desc="desc"/> 
+  <ListItem title="Job" desc="desc"/>
 </div>
 
 <div className='container'>
   <div className='title'> Skills </div>
-   <div className='regular'> skills </div>
+   <div className='regular'> {profileData.skills || 'No skills listed'} </div>
 </div>
+
+<EditProfileModal
+  open={modalOpen}
+  onClose={() => setModalOpen(false)}
+  currentProfile={profileData}
+  onProfileUpdated={handleProfileUpdate}
+/>
 </div>
  </Box>
 );
