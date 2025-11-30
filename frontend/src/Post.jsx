@@ -31,16 +31,27 @@ function LikeButton(props){
     };
 
     return(
-        <IconButton size="small" onClick={handleClick} disabled={loading || !props.postId}>
+        <IconButton
+            size="medium"
+            onClick={handleClick}
+            disabled={loading || !props.postId}
+            sx={{
+                borderRadius: 2,
+                px: 2,
+                '&:hover': {
+                    backgroundColor: liked ? '#e3f2fd' : '#f5f5f5'
+                }
+            }}
+        >
             {liked? (<>
-            <ThumbUpAltIcon sx={{ mr: 0.7, color:'#1976D2' }}/>
-            <Typography fontWeight={510} color='#1976D2'>
-                Liked {likesCount > 0 && `(${likesCount})`}
+            <ThumbUpAltIcon sx={{ mr: 1, color:'#0066cc', fontSize: 20 }}/>
+            <Typography fontWeight={600} fontSize={14} color='#0066cc'>
+                Liked {likesCount > 0 && `· ${likesCount}`}
             </Typography>
             </>) : (<>
-            <ThumbUpOffAltOutlinedIcon sx={{ mr: 0.7 }}/>
-            <Typography fontWeight={510}>
-                Like {likesCount > 0 && `(${likesCount})`}
+            <ThumbUpOffAltOutlinedIcon sx={{ mr: 1, fontSize: 20, color: '#5f6368' }}/>
+            <Typography fontWeight={500} fontSize={14} color='#5f6368'>
+                Like {likesCount > 0 && `· ${likesCount}`}
             </Typography>
             </>)}
          </IconButton>
@@ -76,10 +87,10 @@ return(
     <Box className='container' sx={{mb:2 }}>
 
         <div className='header'>
-        <div className='list_image' style={{ marginTop: '7px' }}> <img  src={props.pic}/> </div>
+        <div className='list_image'> <img  src={props.pic}/> </div>
         <div className='user'>
-        <div className='profile_list' style={{fontWeight:590, fontSize:20 }}>{props.name}</div>
-        <div className='regular'style={{ fontSize:17 }}>{props.position}</div>
+        <div className='profile_list' style={{fontWeight:600, fontSize:16, margin: 0}}>{props.name}</div>
+        <div className='regular' style={{ fontSize:14, color: '#5f6368', margin: 0 }}>{props.position}</div>
         </div>
         </div>
 
@@ -89,48 +100,93 @@ return(
 
         <div className='bottom'>
            <LikeButton liked={props.liked} postId={props.postId} likesCount={props.likesCount} />
-           <IconButton size="small" onClick={() => setShowComments(!showComments)}>
-                <CommentIcon sx={{ mr: 0.7 }} />
-                <Typography fontWeight={510}>Comment {comments.length > 0 && `(${comments.length})`}</Typography>
+           <IconButton
+                size="medium"
+                onClick={() => setShowComments(!showComments)}
+                sx={{
+                    borderRadius: 2,
+                    px: 2,
+                    '&:hover': {
+                        backgroundColor: '#f5f5f5'
+                    }
+                }}
+            >
+                <CommentIcon sx={{ mr: 1, fontSize: 20, color: '#5f6368' }} />
+                <Typography fontWeight={500} fontSize={14} color='#5f6368'>
+                    Comment {comments.length > 0 && `· ${comments.length}`}
+                </Typography>
            </IconButton>
         </div>
 
         {showComments && props.postId && (
-            <Box sx={{ mt: 2, px: 2, pb: 2 }}>
-                <Divider sx={{ mb: 2 }} />
+            <Box sx={{ mt: 0, px: 3, pb: 3, pt: 2, backgroundColor: '#fafafa' }}>
                 {comments.length > 0 && (
-                    <Box sx={{ mb: 2, maxHeight: 300, overflowY: 'auto' }}>
+                    <Box sx={{ mb: 2, maxHeight: 400, overflowY: 'auto' }}>
                         {comments.map((comment, index) => (
-                            <Box key={index} sx={{ display: 'flex', mb: 2 }}>
+                            <Box key={index} sx={{ display: 'flex', mb: 2, alignItems: 'flex-start' }}>
                                 <Avatar
                                     src={comment.author?.profilePicture || default_pfp}
-                                    sx={{ width: 32, height: 32, mr: 1 }}
+                                    sx={{ width: 36, height: 36, mr: 1.5 }}
                                 />
-                                <Box sx={{ flex: 1, bgcolor: '#f0f2f5', borderRadius: 2, p: 1.5 }}>
-                                    <Typography variant="subtitle2" fontWeight={600}>
+                                <Box sx={{
+                                    flex: 1,
+                                    bgcolor: 'white',
+                                    borderRadius: 2,
+                                    p: 1.5,
+                                    boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                                }}>
+                                    <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 0.5, fontSize: '14px' }}>
                                         {comment.author?.name || 'Unknown User'}
                                     </Typography>
-                                    <Typography variant="body2">{comment.text}</Typography>
+                                    <Typography variant="body2" sx={{ fontSize: '14px', color: '#1a1a1a' }}>
+                                        {comment.text}
+                                    </Typography>
                                 </Box>
                             </Box>
                         ))}
                     </Box>
                 )}
                 <form onSubmit={handleAddComment}>
-                    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                    <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'flex-start' }}>
                         <TextField
                             fullWidth
-                            size="small"
+                            multiline
+                            maxRows={4}
                             placeholder="Write a comment..."
                             value={commentText}
                             onChange={(e) => setCommentText(e.target.value)}
                             disabled={commentLoading}
+                            sx={{
+                                backgroundColor: 'white',
+                                borderRadius: 2,
+                                '& .MuiOutlinedInput-root': {
+                                    '& fieldset': {
+                                        borderColor: '#e0e0e0'
+                                    },
+                                    '&:hover fieldset': {
+                                        borderColor: '#0066cc'
+                                    },
+                                    '&.Mui-focused fieldset': {
+                                        borderColor: '#0066cc'
+                                    }
+                                }
+                            }}
                         />
                         <Button
                             type="submit"
                             variant="contained"
                             disabled={!commentText.trim() || commentLoading}
                             startIcon={commentLoading ? <CircularProgress size={16} /> : null}
+                            sx={{
+                                textTransform: 'none',
+                                fontWeight: 600,
+                                px: 3,
+                                py: 1,
+                                backgroundColor: '#0066cc',
+                                '&:hover': {
+                                    backgroundColor: '#0052a3'
+                                }
+                            }}
                         >
                             {commentLoading ? 'Posting...' : 'Post'}
                         </Button>

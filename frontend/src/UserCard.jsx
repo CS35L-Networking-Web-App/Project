@@ -61,21 +61,36 @@ export default function UserCard({ user, onConnectionChange, onUserClick }) {
         mb: 2,
         display: 'flex',
         alignItems: 'center',
-        p: 2,
+        p: 2.5,
         cursor: !user.isSelf && onUserClick ? 'pointer' : 'default',
-        '&:hover': !user.isSelf && onUserClick ? { backgroundColor: '#f5f5f5' } : {}
+        border: '1px solid #e0e0e0',
+        borderRadius: 3,
+        boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+        transition: 'all 0.2s ease',
+        '&:hover': !user.isSelf && onUserClick ? {
+          boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
+          transform: 'translateY(-2px)',
+          borderColor: '#0066cc'
+        } : {
+          boxShadow: '0 2px 6px rgba(0,0,0,0.1)'
+        }
       }}
       onClick={handleCardClick}
     >
       <Avatar
         src={(user.profilePicture && user.profilePicture.trim() !== '') ? user.profilePicture : default_pfp}
-        sx={{ width: 60, height: 60, mr: 2 }}
+        sx={{
+          width: 64,
+          height: 64,
+          mr: 2.5,
+          border: '2px solid #e0e0e0'
+        }}
       />
-      <CardContent sx={{ flex: 1, py: 0 }}>
-        <Typography variant="h6" component="div">
+      <CardContent sx={{ flex: 1, py: 0, px: 0 }}>
+        <Typography variant="h6" component="div" sx={{ fontWeight: 600, fontSize: '17px', mb: 0.5 }}>
           {user.name}
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '14px' }}>
           {user.position || 'No position listed'}
         </Typography>
       </CardContent>
@@ -85,7 +100,20 @@ export default function UserCard({ user, onConnectionChange, onUserClick }) {
         startIcon={buttonConfig.icon}
         onClick={handleConnect}
         disabled={loading || buttonConfig.disabled}
-        sx={{ minWidth: 120 }}
+        sx={{
+          minWidth: 130,
+          textTransform: 'none',
+          fontWeight: 600,
+          px: 3,
+          py: 1,
+          borderRadius: 2,
+          ...(buttonConfig.variant === 'contained' && {
+            backgroundColor: '#0066cc',
+            '&:hover': {
+              backgroundColor: '#0052a3'
+            }
+          })
+        }}
       >
         {buttonConfig.text}
       </Button>

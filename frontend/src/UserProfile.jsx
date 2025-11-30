@@ -79,7 +79,14 @@ export default function UserProfile({ userId, onBack, currentUserId }) {
           color="success"
           startIcon={<CheckCircleIcon />}
           disabled
-          sx={{ minWidth: 150 }}
+          sx={{
+            minWidth: 160,
+            textTransform: 'none',
+            fontWeight: 600,
+            px: 4,
+            py: 1.5,
+            borderRadius: 2
+          }}
         >
           Connected
         </Button>
@@ -91,7 +98,14 @@ export default function UserProfile({ userId, onBack, currentUserId }) {
           variant="outlined"
           startIcon={<PendingIcon />}
           disabled
-          sx={{ minWidth: 150 }}
+          sx={{
+            minWidth: 160,
+            textTransform: 'none',
+            fontWeight: 600,
+            px: 4,
+            py: 1.5,
+            borderRadius: 2
+          }}
         >
           Pending
         </Button>
@@ -100,11 +114,21 @@ export default function UserProfile({ userId, onBack, currentUserId }) {
     return (
       <Button
         variant="contained"
-        color="primary"
         startIcon={<PersonAddIcon />}
         onClick={handleConnect}
         disabled={connectLoading}
-        sx={{ minWidth: 150 }}
+        sx={{
+          minWidth: 160,
+          textTransform: 'none',
+          fontWeight: 600,
+          px: 4,
+          py: 1.5,
+          borderRadius: 2,
+          backgroundColor: '#0066cc',
+          '&:hover': {
+            backgroundColor: '#0052a3'
+          }
+        }}
       >
         Connect
       </Button>
@@ -131,15 +155,22 @@ export default function UserProfile({ userId, onBack, currentUserId }) {
   const userPfp = (user.profilePicture && user.profilePicture.trim() !== '') ? user.profilePicture : default_pfp;
 
   return (
-    <Box sx={{ width: '100%' }}>
-      <Box sx={{ mb: 2 }}>
-        <IconButton onClick={onBack} sx={{ mb: 2 }}>
-          <ArrowBackIcon />
+    <Box sx={{ width: '100%', maxWidth: 1200, margin: '0 auto' }}>
+      <Box sx={{ mb: 3 }}>
+        <IconButton
+          onClick={onBack}
+          sx={{
+            '&:hover': {
+              backgroundColor: '#f5f5f5'
+            }
+          }}
+        >
+          <ArrowBackIcon sx={{ color: '#5f6368' }} />
         </IconButton>
       </Box>
 
-      <Stack direction="row" spacing={10} alignItems={'flex-start'}>
-        <Box sx={{ width: '50%', ml: 4 }}>
+      <Stack direction="row" spacing={4} alignItems={'flex-start'}>
+        <Box sx={{ width: '100%', maxWidth: 600 }}>
           <div className='profile'>
             <div className='headerContainer' style={{ position: 'relative' }}>
               <div className='backImage'> </div>
@@ -153,12 +184,12 @@ export default function UserProfile({ userId, onBack, currentUserId }) {
                   {user.name}
                 </div>
 
-                <div className='regular'>
+                <div className='regular' style={{ textAlign: 'center', color: '#5f6368', fontSize: '16px' }}>
                   {user.position}
                   {user.location && ` • ${user.location}`}
                 </div>
 
-                <Box sx={{ mt: 2 }}>
+                <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center' }}>
                   {getConnectionButton()}
                 </Box>
               </div>
@@ -187,7 +218,7 @@ export default function UserProfile({ userId, onBack, currentUserId }) {
         </Box>
 
         <Stack direction="column" spacing={2} alignItems="stretch" sx={{ flex: 1 }}>
-          <Typography variant="h6" sx={{ mb: 2 }}>Posts</Typography>
+          <Typography variant="h6" sx={{ mb: 1, fontWeight: 600, color: '#1a1a1a' }}>Posts</Typography>
           {postsLoading ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
               <CircularProgress />

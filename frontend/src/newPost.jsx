@@ -39,27 +39,74 @@ const handleSubmit = async (event) => {
 return(
     <Box className='container' sx={{ display:'flex', flexDirection: 'column', flexGrow:1}}>
         <div className='header'>
-        <div className='list_image' style={{ marginTop: '7px' }}> <img  src={props.pic}/> </div>
+        <div className='list_image'> <img  src={props.pic}/> </div>
         <div className='user'>
-        <div className='profile_list' style={{fontWeight:590, fontSize:20 }}>{props.name}</div>
-        <div className='regular'style={{fontSize:17}}>{props.position}</div>
+        <div className='profile_list' style={{fontWeight:600, fontSize:16, margin: 0}}>{props.name}</div>
+        <div className='regular' style={{ fontSize:14, color: '#5f6368', margin: 0 }}>{props.position}</div>
         </div>
         </div>
         <form onSubmit={handleSubmit}>
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-        {success && <Alert severity="success" sx={{ mb: 2 }}>Post created successfully!</Alert>}
-        <TextField multiline minRows={4} fullWidth value={value} onChange={handleChange} helperText={`${value.length}/${maxChars}`}
-        disabled={loading}
-FormHelperTextProps={{sx: {
-      color: (value.length > maxChars) ? 'error.main' : 'text.secondary',
-      fontWeight: (value.length > maxChars) ? 600 : 500,
-      textAlign: 'right',
-      fontSize:15,
-    },}}
-
-        sx={{display:'flex', justifyContent:'flex-start', margin: 1, mt:0, mb:2, fontSize: 20, color: 'black', paddingLeft:2, paddingRight:4}}/>
-         <Box sx={{ display:'flex', justifyContent:'flex-end', mr:3, mb: 1, mt:-1}}>
-            <Button type="submit" disabled={value.trim()==='' || (value.length > maxChars) || loading} startIcon={loading ? <CircularProgress size={20} /> : null} style={{backgroundColor:'#0a66c2', color:'white', fontWeight:510, width:100, fontSize:15,textTransform:'none', opacity: (value.trim()==='' || (value.length > maxChars) || loading)? 0.83: 1, transition: 'opacity 0.2s' }}>
+        {error && <Alert severity="error" sx={{ mb: 2, mx: 2 }}>{error}</Alert>}
+        {success && <Alert severity="success" sx={{ mb: 2, mx: 2 }}>Post created successfully!</Alert>}
+        <TextField
+            multiline
+            minRows={3}
+            maxRows={10}
+            fullWidth
+            value={value}
+            onChange={handleChange}
+            helperText={`${value.length}/${maxChars}`}
+            disabled={loading}
+            placeholder="What do you want to share?"
+            FormHelperTextProps={{sx: {
+              color: (value.length > maxChars) ? 'error.main' : '#5f6368',
+              fontWeight: (value.length > maxChars) ? 600 : 500,
+              textAlign: 'right',
+              fontSize:13,
+              mx: 2
+            },}}
+            sx={{
+                mx: 2,
+                mt: 1,
+                mb: 2,
+                '& .MuiOutlinedInput-root': {
+                    fontSize: 15,
+                    '& fieldset': {
+                        borderColor: '#e0e0e0'
+                    },
+                    '&:hover fieldset': {
+                        borderColor: '#0066cc'
+                    },
+                    '&.Mui-focused fieldset': {
+                        borderColor: '#0066cc'
+                    }
+                }
+            }}
+        />
+         <Box sx={{ display:'flex', justifyContent:'flex-end', px: 2, pb: 2 }}>
+            <Button
+                type="submit"
+                disabled={value.trim()==='' || (value.length > maxChars) || loading}
+                startIcon={loading ? <CircularProgress size={18} /> : null}
+                variant="contained"
+                sx={{
+                    backgroundColor:'#0066cc',
+                    color:'white',
+                    fontWeight:600,
+                    px: 4,
+                    py: 1,
+                    fontSize:14,
+                    textTransform:'none',
+                    borderRadius: 2,
+                    '&:hover': {
+                        backgroundColor: '#0052a3'
+                    },
+                    '&.Mui-disabled': {
+                        backgroundColor: '#cccccc',
+                        color: 'white'
+                    }
+                }}
+            >
               {loading ? 'Posting...' : 'Post'}
             </Button>
          </Box>

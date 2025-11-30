@@ -36,7 +36,7 @@ export default function Profile(props){
   };
 
 return(
-<Box sx={{width:'50%', ml:4}}>
+<Box sx={{width:'100%', maxWidth: 600}}>
 <div className='profile'>
   <div className='headerContainer' style={{position: 'relative'}}>
         <div className='backImage'> </div>
@@ -59,7 +59,7 @@ return(
     {profileData.name}
     </div >
 
-    <div className='regular'>
+    <div className='regular' style={{ textAlign: 'center', color: '#5f6368', fontSize: '16px' }}>
       {profileData.position}
       {profileData.location && ` • ${profileData.location}`}
     </div>
