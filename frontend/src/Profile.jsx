@@ -10,7 +10,9 @@ export default function Profile(props){
   const [profileData, setProfileData] = useState({
     name: props.name || '',
     position: props.position || '',
+    location: props.location || '',
     about: props.about || '',
+    workExperience: props.workExperience || '',
     education: props.education || '',
     skills: props.skills || '',
     profilePicture: props.profilePicture || ''
@@ -20,7 +22,9 @@ export default function Profile(props){
     const newProfileData = {
       name: updatedProfile.name || '',
       position: updatedProfile.position || '',
+      location: updatedProfile.location || '',
       about: updatedProfile.about || '',
+      workExperience: updatedProfile.workExperience || '',
       education: updatedProfile.education || '',
       skills: updatedProfile.skills || '',
       profilePicture: updatedProfile.profilePicture || ''
@@ -57,6 +61,7 @@ return(
 
     <div className='regular'>
       {profileData.position}
+      {profileData.location && ` • ${profileData.location}`}
     </div>
 
     </div>
@@ -68,14 +73,13 @@ return(
 </div>
 
 <div className='container'>
-  <div className='title'> Education </div>
-   <div className='regular'> {profileData.education || 'No education information'} </div>
+  <div className='title'> Work Experience </div>
+   <div className='regular' style={{ whiteSpace: 'pre-wrap' }}> {profileData.workExperience || 'No work experience listed'} </div>
 </div>
 
 <div className='container'>
-  <div className='title'> Experience </div>
-  <ListItem title="Job" desc="desc"/>
-  <ListItem title="Job" desc="desc"/>
+  <div className='title'> Education </div>
+   <div className='regular'> {profileData.education || 'No education information'} </div>
 </div>
 
 <div className='container'>

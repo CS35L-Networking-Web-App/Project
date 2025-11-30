@@ -44,13 +44,24 @@ TabPanel.propTypes= {
   value: PropTypes.number.isRequired,
 };
 
-export function Search(){
+export function Search({ onSearch }){
 
 const [searchVal, setSearchVal] = useState('');
 
 const handleKeyDown = (event) => {
   if(event.key === 'Enter'){
-    setSearchVal('');
+    if (onSearch) {
+      onSearch(searchVal);
+    }
+  }
+}
+
+const handleChange = (typed) => {
+  const value = typed.target.value;
+  setSearchVal(value);
+  // Trigger search on every change for real-time search
+  if (onSearch) {
+    onSearch(value);
   }
 }
 
@@ -58,10 +69,10 @@ const handleKeyDown = (event) => {
     <Box sx={{ mt:1, maxWidth: 350, display:'flex', justifyContent:'flex-start', ml:2, flexGrow:1}}>
       <TextField
      fullWidth
-      placeholder='Search'
+      placeholder='Search for users...'
       value={searchVal}
-      size="small" 
-      onChange={(typed)=>setSearchVal(typed.target.value)}
+      size="small"
+      onChange={handleChange}
       onKeyDown={handleKeyDown}
       InputProps={{
         startAdornment:(

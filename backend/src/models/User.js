@@ -9,9 +9,16 @@ const UserSchema = new mongoose.Schema({
   verificationExpiresAt: { type: Date },
   followers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   following: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  connections: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  connectionRequests: [{
+    from: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    createdAt: { type: Date, default: Date.now }
+  }],
   profilePicture: { type: String },
   position: { type: String },
+  location: { type: String },
   about: { type: String },
+  workExperience: { type: String },
   education: { type: String },
   skills: { type: String }
 }, { timestamps: true });

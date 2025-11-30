@@ -1,18 +1,39 @@
 import './styles.css';
 import { useState } from 'react'
-import {Box, Button, TextField} from '@mui/material';
+import {Box, Button, TextField, CircularProgress, Alert} from '@mui/material';
+import { createPost } from './api.js';
 
 function NewPost(props){
 
 const maxChars = 3000;
 const [value, setValue] = useState('');
+const [loading, setLoading] = useState(false);
+const [error, setError] = useState('');
+const [success, setSuccess] = useState(false);
+
 const handleChange = (event) => {
         setValue(event.target.value);
     };
 
-const handleSubmit = (event) => {
-    event.preventDefault(); // prevent page reload
-    setValue('');
+const handleSubmit = async (event) => {
+    event.preventDefault();
+    setLoading(true);
+    setError('');
+    setSuccess(false);
+
+    try {
+        await createPost(value);
+        setValue('');
+        setSuccess(true);
+        if (props.onPostCreated) {
+            props.onPostCreated();
+        }
+        setTimeout(() => setSuccess(false), 3000);
+    } catch (err) {
+        setError(err.message);
+    } finally {
+        setLoading(false);
+    }
 }
 
 return(
@@ -25,8 +46,10 @@ return(
         </div>
         </div>
         <form onSubmit={handleSubmit}>
+        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+        {success && <Alert severity="success" sx={{ mb: 2 }}>Post created successfully!</Alert>}
         <TextField multiline minRows={4} fullWidth value={value} onChange={handleChange} helperText={`${value.length}/${maxChars}`}
-
+        disabled={loading}
 FormHelperTextProps={{sx: {
       color: (value.length > maxChars) ? 'error.main' : 'text.secondary',
       fontWeight: (value.length > maxChars) ? 600 : 500,
@@ -36,7 +59,9 @@ FormHelperTextProps={{sx: {
 
         sx={{display:'flex', justifyContent:'flex-start', margin: 1, mt:0, mb:2, fontSize: 20, color: 'black', paddingLeft:2, paddingRight:4}}/>
          <Box sx={{ display:'flex', justifyContent:'flex-end', mr:3, mb: 1, mt:-1}}>
-            <Button type="submit" disabled={value.trim()==='' || (value.length > maxChars)} style={{backgroundColor:'#0a66c2', color:'white', fontWeight:510, width:100, fontSize:15,textTransform:'none', opacity: (value.trim()==='' || (value.length > maxChars))? 0.83: 1, transition: 'opacity 0.2s' }}>Post</Button>
+            <Button type="submit" disabled={value.trim()==='' || (value.length > maxChars) || loading} startIcon={loading ? <CircularProgress size={20} /> : null} style={{backgroundColor:'#0a66c2', color:'white', fontWeight:510, width:100, fontSize:15,textTransform:'none', opacity: (value.trim()==='' || (value.length > maxChars) || loading)? 0.83: 1, transition: 'opacity 0.2s' }}>
+              {loading ? 'Posting...' : 'Post'}
+            </Button>
          </Box>
          </form>
     </Box>

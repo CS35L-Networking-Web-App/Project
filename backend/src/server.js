@@ -4,6 +4,7 @@ import cors from 'cors';
 import mongoose from 'mongoose';
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
+import postRoutes from './routes/posts.js';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 
 const app = express();
@@ -26,6 +27,9 @@ app.use('/api/auth', authRoutes);
 // user routes
 app.use('/api/users', userRoutes);
 
+// post routes
+app.use('/api/posts', postRoutes);
+
 // error handling
 app.use((err, req, res, next) => {
   console.error(err.stack);
@@ -36,14 +40,15 @@ const port = Number(process.env.PORT) || 4000;
 
 async function start() {
 
-  let mongoUri = process.env.MONGODB_URI;
-  console.log("Mongo URI:", mongoUri);
+    let mongoUri = process.env.MONGODB_URI;
+    console.log("Mongo URI:", mongoUri);
 
-  if (!mongoUri) {
-      let mongod = await MongoMemoryServer.create();
-      mongoUri = mongod.getUri();
-      console.info('Using in-memory MongoDB');
-  }
+    // If MONGODB_URI points to localhost, use in-memory instead (MongoDB likely not running)
+    if (!mongoUri || mongoUri.includes('localhost:27017')) {
+        let mongod = await MongoMemoryServer.create();
+        mongoUri = mongod.getUri();
+        console.info('Using in-memory MongoDB');
+    }
 
   await mongoose.connect(mongoUri, { autoIndex: true });
   console.log('MongoDB connected');
