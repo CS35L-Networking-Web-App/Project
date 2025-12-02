@@ -324,14 +324,19 @@ export async function createPost(text) {
   return res.json();
 }
 
-// Get All Posts
-export async function getAllPosts() {
+// Search / Get All Posts
+export async function getPosts(searchQuery = '') {
   const token = localStorage.getItem('token');
   if (!token) {
     throw new Error('Not authenticated');
   }
 
-  const res = await fetch(`${API_BASE}/api/posts`, {
+  const url = searchQuery
+    ? `${API_BASE}/api/posts?q=${encodeURIComponent(searchQuery)}`
+    : `${API_BASE}/api/posts`;
+
+
+  const res = await fetch(url, {
     method: "GET",
     headers: {
       "Authorization": `Bearer ${token}`

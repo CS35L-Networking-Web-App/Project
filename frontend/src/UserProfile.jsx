@@ -4,7 +4,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import PendingIcon from '@mui/icons-material/Pending';
-import { getUserById, sendConnectionRequest, getAllPosts } from './api.js';
+import { getUserById, sendConnectionRequest, getPosts } from './api.js';
 import Post from './Post';
 import default_pfp from './assets/default_pfp.png';
 import './styles.css';
@@ -43,7 +43,7 @@ export default function UserProfile({ userId, onBack, currentUserId }) {
     async function loadUserPosts() {
       setPostsLoading(true);
       try {
-        const data = await getAllPosts();
+        const data = await getPosts('');
         // Filter posts by this user
         const userPosts = (data.posts || []).filter(post => post.author.id === userId);
         setPosts(userPosts);

@@ -61,14 +61,28 @@ router.post('/', authenticate, async (req, res) => {
   }
 });
 
-// Get all posts (feed)
+// Get all posts or search posts
 router.get('/', authenticate, async (req, res) => {
   try {
-    const posts = await Post.find()
-      .populate('author', 'name position profilePicture')
-      .populate('comments.author', 'name profilePicture')
-      .sort({ createdAt: -1 })
-      .limit(100);
+    const { q } = req.query;
+    let query = {};
+
+    if (q) {
+      query = {
+        $or: [
+          { text: { $regex: q, $options: 'i' }},
+          { 'author.name': { $regex: q, $options: 'i' } }
+        ]
+      };
+    }
+    
+    const posts = await Post.aggregate([
+      { $lookup: { from: 'users', localField: 'author', foreignField: '_id', as: 'author' } },
+      { $unwind: '$author' },
+      ...(q ? [{ $match: query }] : []),
+      { $sort: { createdAt: -1 } },
+      { $limit: 100 }
+    ]);
 
     const postsWithDetails = posts.map(post => ({
       id: post._id,

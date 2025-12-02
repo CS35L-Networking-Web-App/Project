@@ -17,7 +17,7 @@ import NewPost from './newPost';
 import UserCard from './UserCard';
 import Notifications from './Notifications';
 import UserProfile from './UserProfile';
-import { getCurrentUser, getAllUsers, getConnections, getAllPosts } from './api.js';
+import { getCurrentUser, getAllUsers, getConnections, getPosts } from './api.js';
 
 
 function Home() {
@@ -27,13 +27,16 @@ function Home() {
   const [allUsers, setAllUsers] = useState([]);
   const [connections, setConnections] = useState([]);
   const [posts, setPosts] = useState([]);
+  const [foundPosts, setFoundPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [usersLoading, setUsersLoading] = useState(false);
   const [connectionsLoading, setConnectionsLoading] = useState(false);
   const [postsLoading, setPostsLoading] = useState(false);
+  const [foundPostsLoading, setFoundPostsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [viewingUserId, setViewingUserId] = useState(null);
   const [accountMenuAnchor, setAccountMenuAnchor] = useState(null);
+  const [innerTab, setInnerTab] = useState(0);
 
   const handleChange = (event, newValue) => {
     setValue(newValue);
@@ -69,10 +72,10 @@ function Home() {
 
   useEffect(() => {
     async function loadPosts() {
-      if (value === 0) { // Home tab
+      if (value === 0){ // Home tab is 0
         setPostsLoading(true);
         try {
-          const data = await getAllPosts();
+          const data = await getPosts('');
           setPosts(data.posts || []);
         } catch (err) {
           console.error('Failed to load posts:', err);
@@ -85,8 +88,26 @@ function Home() {
   }, [value]);
 
   useEffect(() => {
+    async function loadFoundPosts() {
+      if (value === 2 && searchQuery==''){ 
+        setFoundPostsLoading(true);
+        try {
+          const data = await getPosts('');
+          setFoundPosts(data.posts || []);
+        } catch (err) {
+          console.error('Failed to load posts:', err);
+        } finally {
+          setFoundPostsLoading(false);
+        }
+      }
+    }
+    loadFoundPosts();
+  }, [value]);
+
+
+  useEffect(() => {
     async function loadConnections() {
-      if (value === 1) { // My Network tab
+      if (value === 1 ) { // My Network tab
         setConnectionsLoading(true);
         try {
           const data = await getConnections();
@@ -103,7 +124,7 @@ function Home() {
 
   useEffect(() => {
     async function loadUsers() {
-      if (value === 2) { // Search tab
+      /*if (value === 2 && searchQuery =='') { // Search tab, keep previous searches when switching between tabs
         setUsersLoading(true);
         try {
           const data = await getAllUsers('');
@@ -113,13 +134,47 @@ function Home() {
         } finally {
           setUsersLoading(false);
         }
-      }
+      }*/
+
+      if (value == 2 && innerTab==0){
+        setUsersLoading(true);
+        try {
+          const data = await getAllUsers('');
+          setAllUsers(oldUserData => {
+            if(oldUserData.length == 0 && searchQuery==''){
+              return (data.users || []);
+            }
+
+        const newUserDataMap = new Map(data.users.map(u => [u.id, u]));
+
+        return oldUserData.map(oldUser => {
+          const newUser = newUserDataMap.get(oldUser.id);
+          if (!newUser) return oldUser;
+
+          return {
+            ...oldUser,
+            isConnection: newUser.isConnection,
+            hasPendingRequest: newUser.hasPendingRequest,
+            hasReceivedRequest: newUser.hasReceivedRequest
+          };
+        });
+        });
+      } catch (err) {
+      console.error("Failed to load users:", err);
+    } finally {
+      setUsersLoading(false);
     }
+    }}
     loadUsers();
-  }, [value]);
+  }, [value, innerTab]);
+
+  useEffect(() => {
+  console.log("Updated allUsers: ", allUsers);
+}, [allUsers]);
+
 
   const handleSearch = async (query) => {
-    setSearchQuery(query);
+
     setUsersLoading(true);
     try {
       const data = await getAllUsers(query);
@@ -129,6 +184,18 @@ function Home() {
     } finally {
       setUsersLoading(false);
     }
+
+    setFoundPostsLoading(true);
+    try {
+      const data = await getPosts(query);
+      setFoundPosts(data.posts || []);
+      console.log('hi');
+      console.log(data.posts);
+      } catch (err) {
+        console.error('Failed to search posts:', err);
+      } finally {
+        setFoundPostsLoading(false);
+      }
   };
 
   const handleConnectionChange = () => {
@@ -149,7 +216,7 @@ function Home() {
   const handlePostCreated = async () => {
     // Reload posts when a new post is created
     try {
-      const data = await getAllPosts();
+      const data = await getPosts('');
       setPosts(data.posts || []);
     } catch (err) {
       console.error('Failed to reload posts:', err);
@@ -341,10 +408,13 @@ function Home() {
             <Box sx={{ mb: 3 }}>
               <TextField
                 fullWidth
-                placeholder='Search for users by name, email, or position...'
+                placeholder={innerTab === 0 ? 'Search for users by name, email, or position...' : 'Search for posts by content or author name...'}
                 value={searchQuery}
                 size="medium"
-                onChange={(e) => handleSearch(e.target.value)}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                  handleSearch(searchQuery);}}}
                 InputProps={{
                   startAdornment:(
                     <InputAdornment position='start'>
@@ -368,6 +438,11 @@ function Home() {
                 }}
               />
             </Box>
+          <Tabs value={innerTab} onChange={(e, newVal) => {setInnerTab(newVal)}} sx={{ mb:2, '& .MuiTab-root': {textTransform: 'none', fontSize: '15px',}}}>
+          <Tab label="Users" />
+          <Tab label="Posts"/>
+          </Tabs>
+          <TabPanel value={innerTab} index={0}>
             {usersLoading ? (
               <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
                 <CircularProgress />
@@ -389,8 +464,37 @@ function Home() {
                 />
               ))
             )}
+          </TabPanel>
+          <TabPanel value={innerTab} index={1}>
+            {foundPostsLoading ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+                <CircularProgress />
+              </Box>
+            ) : posts.length === 0 ? (
+              <Box sx={{ textAlign: 'center', p: 3 }}>
+                <Typography variant="h6" color="text.secondary">No posts found</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {searchQuery.trim() === '' ? 'No posts yet' : 'Try searching with different keywords'}
+                </Typography>
+              </Box>
+            ) : (
+              foundPosts.map(post => (
+              <Post
+                key={post.id}
+                postId={post.id}
+                name={post.author.name}
+                text={post.text}
+                position={post.author.position}
+                pic={post.author.profilePicture || userPfp}
+                liked={post.isLiked}
+                likesCount={post.likesCount}
+                comments={post.comments}
+              />
+            ))
+            )}
+          </TabPanel>
           </Box>
-        )}
+         )}
       </TabPanel>
       <TabPanel value={value} index={3}>
         <Box sx={{ maxWidth: 1200, margin: '0 auto' }}>

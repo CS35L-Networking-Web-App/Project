@@ -3,7 +3,7 @@ import { Card, CardContent, Avatar, Button, Typography, Box } from '@mui/materia
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import PendingIcon from '@mui/icons-material/Pending';
-import { sendConnectionRequest } from './api.js';
+import { sendConnectionRequest, acceptConnectionRequest } from './api.js';
 import default_pfp from './assets/default_pfp.png';
 
 export default function UserCard({ user, onConnectionChange, onUserClick }) {
@@ -16,19 +16,38 @@ export default function UserCard({ user, onConnectionChange, onUserClick }) {
 
   const handleConnect = async (e) => {
     e.stopPropagation(); // Prevent card click
-    setLoading(true);
+
+    if(!connectionStatus.hasReceivedRequest){
+      setLoading(true);
     try {
       await sendConnectionRequest(user.id);
       setConnectionStatus({ ...connectionStatus, hasPendingRequest: true });
       if (onConnectionChange) {
         onConnectionChange(user.id);
-      }
+         }
     } catch (err) {
       console.error('Failed to send connection request:', err);
       alert(err.message);
     } finally {
       setLoading(false);
     }
+  }
+
+  else if (connectionStatus.hasReceivedRequest){
+    setLoading(true);
+    try {
+      await acceptConnectionRequest(user.id);
+      setConnectionStatus({ ...connectionStatus, hasPendingRequest: false, isConnection: true });
+       if (onConnectionChange) {
+        onConnectionChange(user.id);
+         }
+        } catch (err) {
+      console.error('Failed to accept connection:', err);
+      alert(err.message);
+    } finally {
+      setLoading(false);
+    }
+}
   };
 
   const handleCardClick = () => {
