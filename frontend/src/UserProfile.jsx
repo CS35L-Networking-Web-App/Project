@@ -6,7 +6,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import PendingIcon from '@mui/icons-material/Pending';
 import { getUserById, sendConnectionRequest, getPosts } from './api.js';
 import Post from './Post';
-import default_pfp from './assets/default_pfp.png';
+import default_pfp from './assets/default_pfp.svg';
 import './styles.css';
 
 export default function UserProfile({ userId, onBack, currentUserId }) {

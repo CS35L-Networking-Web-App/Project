@@ -13,9 +13,9 @@ import {
 } from '@mui/material';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import { getConnectionRequests, acceptConnectionRequest, rejectConnectionRequest } from './api.js';
-import default_pfp from './assets/default_pfp.png';
+import default_pfp from './assets/default_pfp.svg';
 
-export default function Notifications({ onRequestAccepted }) {
+export default function Notifications({ onRequestAccepted, updateNotifs, onRequestRejected }) {
   const [anchorEl, setAnchorEl] = useState(null);
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -41,6 +41,11 @@ export default function Notifications({ onRequestAccepted }) {
     const interval = setInterval(loadRequests, 30000);
     return () => clearInterval(interval);
   }, []);
+
+  // Immediately update notifications when connection request is accepted in search tab
+  useEffect(() => {
+  loadRequests();
+}, [updateNotifs]);
 
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -71,6 +76,9 @@ export default function Notifications({ onRequestAccepted }) {
     try {
       await rejectConnectionRequest(fromUserId);
       setRequests(requests.filter(req => req.from.id !== fromUserId));
+      if(onRequestRejected){
+        onRequestRejected();
+      }
     } catch (err) {
       console.error('Failed to reject request:', err);
       alert(err.message);

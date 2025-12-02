@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import {Box, IconButton} from '@mui/material';
-import {ListItem} from './Items';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import EditProfileModal from './EditProfileModal';
 import './styles.css';

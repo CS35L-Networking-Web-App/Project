@@ -9,9 +9,9 @@ import PersonIcon from '@mui/icons-material/Person';
 import LogoutIcon from '@mui/icons-material/Logout';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import './styles.css';
-import {ProfileItem, TabPanel} from './Items';
+import { TabPanel } from './utilities.jsx';
 import Profile from './Profile'
-import default_pfp from './assets/default_pfp.png';
+import default_pfp from './assets/default_pfp.svg';
 import Post from './Post';
 import NewPost from './newPost';
 import UserCard from './UserCard';
@@ -37,6 +37,7 @@ function Home() {
   const [viewingUserId, setViewingUserId] = useState(null);
   const [accountMenuAnchor, setAccountMenuAnchor] = useState(null);
   const [innerTab, setInnerTab] = useState(0);
+  const [updateNotifs, setUpdateNotifs] = useState(0);
 
   const handleChange = (event, newValue) => {
     setValue(newValue);
@@ -122,56 +123,23 @@ function Home() {
     loadConnections();
   }, [value]);
 
-  useEffect(() => {
-    async function loadUsers() {
-      /*if (value === 2 && searchQuery =='') { // Search tab, keep previous searches when switching between tabs
+  async function loadUsers() {
+      if (value == 2 && innerTab==0){ // Search tab, keep previous searches when switching between tabs
         setUsersLoading(true);
         try {
-          const data = await getAllUsers('');
+          const data = await getAllUsers(searchQuery);
           setAllUsers(data.users || []);
-        } catch (err) {
-          console.error('Failed to load users:', err);
-        } finally {
-          setUsersLoading(false);
-        }
-      }*/
-
-      if (value == 2 && innerTab==0){
-        setUsersLoading(true);
-        try {
-          const data = await getAllUsers('');
-          setAllUsers(oldUserData => {
-            if(oldUserData.length == 0 && searchQuery==''){
-              return (data.users || []);
+            } catch (err) {
+              console.error("Failed to load users:", err);
+             } finally {
+              setUsersLoading(false);
             }
+        } 
+      }
 
-        const newUserDataMap = new Map(data.users.map(u => [u.id, u]));
-
-        return oldUserData.map(oldUser => {
-          const newUser = newUserDataMap.get(oldUser.id);
-          if (!newUser) return oldUser;
-
-          return {
-            ...oldUser,
-            isConnection: newUser.isConnection,
-            hasPendingRequest: newUser.hasPendingRequest,
-            hasReceivedRequest: newUser.hasReceivedRequest
-          };
-        });
-        });
-      } catch (err) {
-      console.error("Failed to load users:", err);
-    } finally {
-      setUsersLoading(false);
-    }
-    }}
+  useEffect(() => {
     loadUsers();
   }, [value, innerTab]);
-
-  useEffect(() => {
-  console.log("Updated allUsers: ", allUsers);
-}, [allUsers]);
-
 
   const handleSearch = async (query) => {
 
@@ -189,8 +157,6 @@ function Home() {
     try {
       const data = await getPosts(query);
       setFoundPosts(data.posts || []);
-      console.log('hi');
-      console.log(data.posts);
       } catch (err) {
         console.error('Failed to search posts:', err);
       } finally {
@@ -211,6 +177,11 @@ function Home() {
       }
       reloadConnections();
     }
+
+     if(value == 2 && innerTab==0){ 
+      setUpdateNotifs(prev => !prev);
+      loadUsers();
+    }
   };
 
   const handlePostCreated = async () => {
@@ -229,6 +200,7 @@ function Home() {
 
   const handleBackFromProfile = () => {
     setViewingUserId(null);
+    loadUsers();
   };
 
   if (loading) {
@@ -293,7 +265,7 @@ function Home() {
           <Tab icon={<PersonIcon/>} label="My Profile" iconPosition="start" />
         </Tabs>
         <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 1 }}>
-          <Notifications onRequestAccepted={handleConnectionChange} />
+          <Notifications onRequestAccepted={handleConnectionChange} updateNotifs={updateNotifs} onRequestRejected={loadUsers} />
           <IconButton
             onClick={handleAccountMenuOpen}
             sx={{

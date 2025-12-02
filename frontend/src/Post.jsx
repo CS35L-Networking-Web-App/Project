@@ -6,7 +6,7 @@ import ThumbUpOffAltOutlinedIcon from '@mui/icons-material/ThumbUpOffAltOutlined
 import ThumbUpAltIcon from '@mui/icons-material/ThumbUpAlt';
 import CommentIcon from '@mui/icons-material/Comment';
 import { toggleLikePost, addComment } from './api.js';
-import default_pfp from './assets/default_pfp.png';
+import default_pfp from './assets/default_pfp.svg';
 
 
 function LikeButton(props){

@@ -4,7 +4,7 @@ import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import PendingIcon from '@mui/icons-material/Pending';
 import { sendConnectionRequest, acceptConnectionRequest } from './api.js';
-import default_pfp from './assets/default_pfp.png';
+import default_pfp from './assets/default_pfp.svg';
 
 export default function UserCard({ user, onConnectionChange, onUserClick }) {
   const [connectionStatus, setConnectionStatus] = useState({
