@@ -88,12 +88,26 @@ function Home() {
     loadPosts();
   }, [value]);
 
+  async function loadUsers() {
+      if (value == 2 && innerTab==0){ // Search tab, keep previous searches when switching between tabs
+        setUsersLoading(true);
+        try {
+          const data = await getAllUsers(searchQuery);
+          setAllUsers(data.users || []);
+            } catch (err) {
+              console.error("Failed to load users:", err);
+             } finally {
+              setUsersLoading(false);
+            }
+          }
+        }
+
   useEffect(() => {
     async function loadFoundPosts() {
-      if (value === 2 && searchQuery==''){ 
+      if (value === 2 && innerTab==1){ 
         setFoundPostsLoading(true);
         try {
-          const data = await getPosts('');
+          const data = await getPosts(searchQuery);
           setFoundPosts(data.posts || []);
         } catch (err) {
           console.error('Failed to load posts:', err);
@@ -103,8 +117,8 @@ function Home() {
       }
     }
     loadFoundPosts();
-  }, [value]);
-
+    loadUsers();
+  }, [value, innerTab, searchQuery]);
 
   useEffect(() => {
     async function loadConnections() {
@@ -122,47 +136,6 @@ function Home() {
     }
     loadConnections();
   }, [value]);
-
-  async function loadUsers() {
-      if (value == 2 && innerTab==0){ // Search tab, keep previous searches when switching between tabs
-        setUsersLoading(true);
-        try {
-          const data = await getAllUsers(searchQuery);
-          setAllUsers(data.users || []);
-            } catch (err) {
-              console.error("Failed to load users:", err);
-             } finally {
-              setUsersLoading(false);
-            }
-        } 
-      }
-
-  useEffect(() => {
-    loadUsers();
-  }, [value, innerTab]);
-
-  const handleSearch = async (query) => {
-    setSearchQuery(query);
-    setUsersLoading(true);
-    try {
-      const data = await getAllUsers(query);
-      setAllUsers(data.users || []);
-    } catch (err) {
-      console.error('Failed to search users:', err);
-    } finally {
-      setUsersLoading(false);
-    }
-
-    setFoundPostsLoading(true);
-    try {
-      const data = await getPosts(query);
-      setFoundPosts(data.posts || []);
-      } catch (err) {
-        console.error('Failed to search posts:', err);
-      } finally {
-        setFoundPostsLoading(false);
-      }
-  };
 
   const handleConnectionChange = () => {
     // Reload connections when a new connection is made
@@ -200,7 +173,7 @@ function Home() {
 
   const handleBackFromProfile = () => {
     setViewingUserId(null);
-    loadUsers();
+    loadFoundPosts();
   };
 
   if (loading) {
@@ -374,7 +347,7 @@ function Home() {
       </TabPanel>
       <TabPanel value={value} index={2}>
         {viewingUserId ? (
-          <UserProfile userId={viewingUserId} onBack={handleBackFromProfile} currentUserId={user?.id} />
+          <UserProfile userId={viewingUserId} onBack={handleBackFromProfile} onConnectionChange={handleConnectionChange} currentUserId={user?.id} />
         ) : (
           <Box sx={{ maxWidth: 800, margin: '0 auto' }}>
             <Box sx={{ mb: 3 }}>
@@ -383,7 +356,7 @@ function Home() {
                 placeholder={innerTab === 0 ? 'Search for users by name, email, or position...' : 'Search for posts by content or author name...'}
                 value={searchQuery}
                 size="medium"
-                onChange={(e) => handleSearch(e.target.value)}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 InputProps={{
                   startAdornment:(
                     <InputAdornment position='start'>
@@ -439,7 +412,7 @@ function Home() {
               <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
                 <CircularProgress />
               </Box>
-            ) : posts.length === 0 ? (
+            ) : foundPosts.length === 0 ? (
               <Box sx={{ textAlign: 'center', p: 3 }}>
                 <Typography variant="h6" color="text.secondary">No posts found</Typography>
                 <Typography variant="body2" color="text.secondary">

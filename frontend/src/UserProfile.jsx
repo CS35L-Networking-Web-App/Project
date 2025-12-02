@@ -1,15 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Box, Stack, IconButton, CircularProgress, Typography, Button } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import PersonAddIcon from '@mui/icons-material/PersonAdd';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import PendingIcon from '@mui/icons-material/Pending';
-import { getUserById, sendConnectionRequest, getPosts } from './api.js';
+import { getUserById, sendConnectionRequest, getPosts, acceptConnectionRequest } from './api.js';
+import { getButtonConfig } from './utilities.jsx';
 import Post from './Post';
 import default_pfp from './assets/default_pfp.svg';
 import './styles.css';
 
-export default function UserProfile({ userId, onBack, currentUserId }) {
+export default function UserProfile({ userId, onBack, currentUserId, onConnectionChange }) {
   const [user, setUser] = useState(null);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -59,81 +57,70 @@ export default function UserProfile({ userId, onBack, currentUserId }) {
   }, [userId]);
 
   const handleConnect = async () => {
+
+    if(!connectionStatus.hasReceivedRequest){
     setConnectLoading(true);
     try {
       await sendConnectionRequest(userId);
       setConnectionStatus({ ...connectionStatus, hasPendingRequest: true });
+       if (onConnectionChange) {
+        onConnectionChange();
+      }
     } catch (err) {
       console.error('Failed to send connection request:', err);
       alert(err.message);
     } finally {
       setConnectLoading(false);
     }
+  }
+
+  else if (connectionStatus.hasReceivedRequest){
+  setConnectLoading(true);
+  try {
+      await acceptConnectionRequest(userId);
+      setConnectionStatus({ ...connectionStatus, hasPendingRequest: false, isConnection:true});
+       if (onConnectionChange) {
+        onConnectionChange();
+      }
+    } catch (err) {
+      console.error('Failed to send accept connection request:', err);
+      alert(err.message);
+    } finally {
+      setConnectLoading(false);
+    }
+  }
   };
 
   const getConnectionButton = () => {
-    if (connectionStatus.isConnection) {
-      return (
+
+    const buttonConfig = getButtonConfig(false, connectionStatus);
+     
+        return (
         <Button
-          variant="contained"
-          color="success"
-          startIcon={<CheckCircleIcon />}
-          disabled
+          variant={buttonConfig.variant}
+          color={buttonConfig.color}
+          startIcon={buttonConfig.icon}
+          disabled={buttonConfig.disabled || connectLoading}
+          onClick={handleConnect}
           sx={{
             minWidth: 160,
             textTransform: 'none',
             fontWeight: 600,
             px: 4,
             py: 1.5,
-            borderRadius: 2
-          }}
-        >
-          Connected
-        </Button>
-      );
-    }
-    if (connectionStatus.hasPendingRequest) {
-      return (
-        <Button
-          variant="outlined"
-          startIcon={<PendingIcon />}
-          disabled
-          sx={{
-            minWidth: 160,
-            textTransform: 'none',
-            fontWeight: 600,
-            px: 4,
-            py: 1.5,
-            borderRadius: 2
-          }}
-        >
-          Pending
-        </Button>
-      );
-    }
-    return (
-      <Button
-        variant="contained"
-        startIcon={<PersonAddIcon />}
-        onClick={handleConnect}
-        disabled={connectLoading}
-        sx={{
-          minWidth: 160,
-          textTransform: 'none',
-          fontWeight: 600,
-          px: 4,
-          py: 1.5,
-          borderRadius: 2,
-          backgroundColor: '#0066cc',
-          '&:hover': {
-            backgroundColor: '#0052a3'
-          }
+            borderRadius: 2,
+            ...(buttonConfig.variant === 'contained' && {
+            backgroundColor: '#0066cc',
+            '&:hover': {
+              backgroundColor: '#0052a3'
+            }
+          })
         }}
-      >
-        Connect
-      </Button>
-    );
-  };
+        >
+        {buttonConfig.text}
+        </Button>
+     );
+    };
 
   if (loading) {
     return (

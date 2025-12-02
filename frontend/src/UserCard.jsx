@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import { Card, CardContent, Avatar, Button, Typography, Box } from '@mui/material';
-import PersonAddIcon from '@mui/icons-material/PersonAdd';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import PendingIcon from '@mui/icons-material/Pending';
+import { getButtonConfig } from './utilities.jsx';
 import { sendConnectionRequest, acceptConnectionRequest } from './api.js';
 import default_pfp from './assets/default_pfp.svg';
 
@@ -23,7 +21,7 @@ export default function UserCard({ user, onConnectionChange, onUserClick }) {
       await sendConnectionRequest(user.id);
       setConnectionStatus({ ...connectionStatus, hasPendingRequest: true });
       if (onConnectionChange) {
-        onConnectionChange(user.id);
+        onConnectionChange();
          }
     } catch (err) {
       console.error('Failed to send connection request:', err);
@@ -39,15 +37,15 @@ export default function UserCard({ user, onConnectionChange, onUserClick }) {
       await acceptConnectionRequest(user.id);
       setConnectionStatus({ ...connectionStatus, hasPendingRequest: false, isConnection: true });
        if (onConnectionChange) {
-        onConnectionChange(user.id);
+        onConnectionChange();
          }
         } catch (err) {
-      console.error('Failed to accept connection:', err);
+      console.error('Failed to accept connection request:', err);
       alert(err.message);
     } finally {
       setLoading(false);
     }
-}
+  }
   };
 
   const handleCardClick = () => {
@@ -56,23 +54,7 @@ export default function UserCard({ user, onConnectionChange, onUserClick }) {
     }
   };
 
-  const getButtonConfig = () => {
-    if (user.isSelf) {
-      return { text: 'You', icon: null, disabled: true, variant: 'outlined', color: 'default' };
-    }
-    if (connectionStatus.isConnection) {
-      return { text: 'Connected', icon: <CheckCircleIcon />, disabled: true, variant: 'contained', color: 'success' };
-    }
-    if (connectionStatus.hasPendingRequest) {
-      return { text: 'Pending', icon: <PendingIcon />, disabled: true, variant: 'outlined', color: 'default' };
-    }
-    if (connectionStatus.hasReceivedRequest) {
-      return { text: 'Accept Request', icon: <PersonAddIcon />, disabled: false, variant: 'contained', color: 'primary' };
-    }
-    return { text: 'Connect', icon: <PersonAddIcon />, disabled: false, variant: 'contained', color: 'primary' };
-  };
-
-  const buttonConfig = getButtonConfig();
+  const buttonConfig = getButtonConfig(user.isSelf, connectionStatus);
 
   return (
     <Card
