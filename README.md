@@ -1,3 +1,3 @@
 # Project
 
-TODO: Connect backend to frontend
+Run dev.sh to start the frontend and backend simultaneously.

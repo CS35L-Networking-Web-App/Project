@@ -6,7 +6,8 @@ import ThumbUpOffAltOutlinedIcon from '@mui/icons-material/ThumbUpOffAltOutlined
 import ThumbUpAltIcon from '@mui/icons-material/ThumbUpAlt';
 import CommentIcon from '@mui/icons-material/Comment';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { toggleLikePost, addComment, deletePost } from './api.js';
+import ReplyIcon from '@mui/icons-material/Reply';
+import { toggleLikePost, addComment, deletePost, deleteComment, replyToComment } from './api.js';
 import default_pfp from './assets/default_pfp.svg';
 
 
@@ -62,11 +63,15 @@ function LikeButton(props){
 
 function Post(props){
 
-    const [comments, setComments] = useState(props.comments || []);
+    const [comments, setComments] = useState(() => (props.comments || []).map((c) => ({ ...c, replies: c.replies || [] })));
     const [commentText, setCommentText] = useState('');
     const [showComments, setShowComments] = useState(false);
     const [commentLoading, setCommentLoading] = useState(false);
     const [deleting, setDeleting] = useState(false);
+    const [commentActionId, setCommentActionId] = useState(null);
+    const [replyTexts, setReplyTexts] = useState({});
+    const [replySubmittingId, setReplySubmittingId] = useState(null);
+    const [replyVisible, setReplyVisible] = useState({});
 
     const handleAddComment = async (e) => {
         e.preventDefault();
@@ -75,7 +80,7 @@ function Post(props){
         setCommentLoading(true);
         try {
             const newComment = await addComment(props.postId, commentText);
-            setComments([...comments, newComment]);
+            setComments((prev) => [...prev, { ...newComment, replies: newComment.replies || [] }]);
             setCommentText('');
         } catch (err) {
             console.error('Failed to add comment:', err);
@@ -85,9 +90,54 @@ function Post(props){
         }
     };
 
+    const addReplyToList = (list, parentId, reply) => {
+        return list.map((c) => {
+            if (c.id === parentId) {
+                return { ...c, replies: [...(c.replies || []), reply] };
+            }
+            if (c.replies && c.replies.length) {
+                return { ...c, replies: addReplyToList(c.replies, parentId, reply) };
+            }
+            return c;
+        });
+    };
+
+    const handleReplySubmit = async (parentId) => {
+        const text = (replyTexts[parentId] || '').trim();
+        if (!text || !props.postId) return;
+        setReplySubmittingId(parentId);
+        try {
+            const newReply = await replyToComment(props.postId, parentId, text);
+            setComments((prev) => addReplyToList(prev, parentId, newReply));
+            setReplyTexts((prev) => ({ ...prev, [parentId]: '' }));
+            setReplyVisible((prev) => ({ ...prev, [parentId]: false }));
+        } catch (err) {
+            console.error('Failed to reply to comment:', err);
+            alert(err.message);
+        } finally {
+            setReplySubmittingId(null);
+        }
+    };
+
+    const handleDeleteComment = async (commentId) => {
+        if (!props.postId) return;
+        const confirmed = window.confirm('Are you sure you want to delete this comment?');
+        if (!confirmed) return;
+        setCommentActionId(commentId);
+        try {
+            const result = await deleteComment(props.postId, commentId);
+            setComments(result.comments || []);
+        } catch (err) {
+            console.error('Failed to delete comment:', err);
+            alert(err.message);
+        } finally {
+            setCommentActionId(null);
+        }
+    };
+
     const handleDelete = async () => {
         if (!props.postId || !props.onDelete) return;
-        const confirmed = window.confirm('Are you sure you want to delete this post?');
+        const confirmed = window.confirm('Deleting this post will also delete all comments. Are you sure?');
         if (!confirmed) return;
         setDeleting(true);
         try {
@@ -103,6 +153,98 @@ function Post(props){
     };
 
     const isAuthor = props.currentUserId && props.authorId && props.currentUserId === props.authorId;
+
+    const renderComment = (comment, depth = 0) => {
+        const isCommentAuthor = props.currentUserId && comment.author?.id === props.currentUserId;
+        const displayText = comment.isDeleted ? 'This comment has been deleted' : comment.text;
+        const canReply = !comment.isDeleted;
+        const canDeleteComment = isCommentAuthor && !comment.isDeleted;
+        const showReplyBox = replyVisible[comment.id];
+
+        return (
+            <Box key={comment.id} sx={{ display: 'flex', mb: 2, alignItems: 'flex-start', ml: depth > 0 ? 6 : 0 }}>
+                <Avatar
+                    src={comment.author?.profilePicture || default_pfp}
+                    sx={{ width: 36, height: 36, mr: 1.5 }}
+                />
+                <Box sx={{ flex: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 0.5, fontSize: '14px' }}>
+                            {comment.author?.name || 'Unknown User'}
+                        </Typography>
+                        {canDeleteComment && (
+                            <IconButton
+                                size="small"
+                                onClick={() => handleDeleteComment(comment.id)}
+                                disabled={commentActionId === comment.id}
+                            >
+                                <DeleteIcon sx={{ fontSize: 18, color: '#d32f2f' }} />
+                            </IconButton>
+                        )}
+                    </Box>
+                    <Typography variant="body2" sx={{ fontSize: '14px', color: '#1a1a1a', mb: 1 }}>
+                        {displayText}
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 1, mb: showReplyBox ? 1 : 0 }}>
+                        <Button
+                            size="small"
+                            startIcon={<ReplyIcon fontSize="small" />}
+                            onClick={() => setReplyVisible((prev) => ({ ...prev, [comment.id]: !prev[comment.id] }))}
+                            disabled={!canReply}
+                            sx={{ textTransform: 'none' }}
+                        >
+                            Reply
+                        </Button>
+                    </Box>
+                    {showReplyBox && canReply && (
+                        <Box sx={{ mb: 1 }}>
+                            <TextField
+                                fullWidth
+                                multiline
+                                maxRows={4}
+                                placeholder="Write a reply..."
+                                value={replyTexts[comment.id] || ''}
+                                onChange={(e) => setReplyTexts((prev) => ({ ...prev, [comment.id]: e.target.value }))}
+                                disabled={replySubmittingId === comment.id}
+                                sx={{
+                                    backgroundColor: 'white',
+                                    borderRadius: 2,
+                                    '& .MuiOutlinedInput-root': {
+                                        '& fieldset': {
+                                            borderColor: '#e0e0e0'
+                                        },
+                                        '&:hover fieldset': {
+                                            borderColor: '#0066cc'
+                                        },
+                                        '&.Mui-focused fieldset': {
+                                            borderColor: '#0066cc'
+                                        }
+                                    }
+                                }}
+                            />
+                            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
+                                <Button
+                                    size="small"
+                                    variant="contained"
+                                    onClick={() => handleReplySubmit(comment.id)}
+                                    disabled={!replyTexts[comment.id]?.trim() || replySubmittingId === comment.id}
+                                    startIcon={replySubmittingId === comment.id ? <CircularProgress size={14} /> : null}
+                                    sx={{ textTransform: 'none', fontWeight: 600 }}
+                                >
+                                    {replySubmittingId === comment.id ? 'Posting...' : 'Reply'}
+                                </Button>
+                            </Box>
+                        </Box>
+                    )}
+                    {comment.replies && comment.replies.length > 0 && (
+                        <Box sx={{ mt: 1 }}>
+                            {comment.replies.map((reply) => renderComment(reply, depth + 1))}
+                        </Box>
+                    )}
+                </Box>
+            </Box>
+        );
+    };
 
 return(
     <Box className='container' sx={{mb:2 }}>
@@ -153,28 +295,7 @@ return(
             <Box sx={{ mt: 0, px: 3, pb: 3, pt: 2, backgroundColor: '#fafafa' }}>
                 {comments.length > 0 && (
                     <Box sx={{ mb: 2, maxHeight: 400, overflowY: 'auto' }}>
-                        {comments.map((comment, index) => (
-                            <Box key={index} sx={{ display: 'flex', mb: 2, alignItems: 'flex-start' }}>
-                                <Avatar
-                                    src={comment.author?.profilePicture || default_pfp}
-                                    sx={{ width: 36, height: 36, mr: 1.5 }}
-                                />
-                                <Box sx={{
-                                    flex: 1,
-                                    bgcolor: 'white',
-                                    borderRadius: 2,
-                                    p: 1.5,
-                                    boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
-                                }}>
-                                    <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 0.5, fontSize: '14px' }}>
-                                        {comment.author?.name || 'Unknown User'}
-                                    </Typography>
-                                    <Typography variant="body2" sx={{ fontSize: '14px', color: '#1a1a1a' }}>
-                                        {comment.text}
-                                    </Typography>
-                                </Box>
-                            </Box>
-                        ))}
+                        {comments.map((comment) => renderComment(comment))}
                     </Box>
                 )}
                 <form onSubmit={handleAddComment}>

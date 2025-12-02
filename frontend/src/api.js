@@ -397,6 +397,52 @@ export async function addComment(postId, text) {
   return res.json();
 }
 
+// Delete Comment
+export async function deleteComment(postId, commentId) {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    throw new Error('Not authenticated');
+  }
+
+  const res = await fetch(`${API_BASE}/api/posts/${postId}/comments/${commentId}`, {
+    method: "DELETE",
+    headers: {
+      "Authorization": `Bearer ${token}`
+    }
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => null);
+    throw new Error(extractErrorMessage(err, "Failed to delete comment"));
+  }
+
+  return res.json();
+}
+
+// Reply to Comment
+export async function replyToComment(postId, commentId, text) {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    throw new Error('Not authenticated');
+  }
+
+  const res = await fetch(`${API_BASE}/api/posts/${postId}/comments/${commentId}/replies`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    },
+    body: JSON.stringify({ text }),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => null);
+    throw new Error(extractErrorMessage(err, "Failed to reply to comment"));
+  }
+
+  return res.json();
+}
+
 // Delete Post
 export async function deletePost(postId) {
   const token = localStorage.getItem('token');
