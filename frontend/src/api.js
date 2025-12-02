@@ -396,3 +396,25 @@ export async function addComment(postId, text) {
 
   return res.json();
 }
+
+// Delete Post
+export async function deletePost(postId) {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    throw new Error('Not authenticated');
+  }
+
+  const res = await fetch(`${API_BASE}/api/posts/${postId}`, {
+    method: "DELETE",
+    headers: {
+      "Authorization": `Bearer ${token}`
+    }
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => null);
+    throw new Error(extractErrorMessage(err, "Failed to delete post"));
+  }
+
+  return res.json();
+}

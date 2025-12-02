@@ -167,6 +167,11 @@ function Home() {
     }
   };
 
+  const handlePostDeleted = (postId) => {
+    setPosts((prev) => prev.filter((p) => p.id !== postId));
+    setFoundPosts((prev) => prev.filter((p) => p.id !== postId));
+  };
+
   const handleUserClick = (userId) => {
     setViewingUserId(userId);
   };
@@ -307,6 +312,9 @@ function Home() {
                 liked={post.isLiked}
                 likesCount={post.likesCount}
                 comments={post.comments}
+                authorId={post.author.id}
+                currentUserId={user.id}
+                onDelete={handlePostDeleted}
               />
             ))
           )}
@@ -431,6 +439,9 @@ function Home() {
                 liked={post.isLiked}
                 likesCount={post.likesCount}
                 comments={post.comments}
+                authorId={post.author.id}
+                currentUserId={user.id}
+                onDelete={handlePostDeleted}
               />
             ))
             )}

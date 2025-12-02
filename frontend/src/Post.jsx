@@ -1,11 +1,12 @@
 import './styles.css';
 import { useState } from 'react'
-import {Box, IconButton, TextField, Button, Avatar, Divider, CircularProgress} from '@mui/material';
+import {Box, IconButton, TextField, Button, Avatar, CircularProgress} from '@mui/material';
 import Typography from '@mui/material/Typography';
 import ThumbUpOffAltOutlinedIcon from '@mui/icons-material/ThumbUpOffAltOutlined';
 import ThumbUpAltIcon from '@mui/icons-material/ThumbUpAlt';
 import CommentIcon from '@mui/icons-material/Comment';
-import { toggleLikePost, addComment } from './api.js';
+import DeleteIcon from '@mui/icons-material/Delete';
+import { toggleLikePost, addComment, deletePost } from './api.js';
 import default_pfp from './assets/default_pfp.svg';
 
 
@@ -65,6 +66,7 @@ function Post(props){
     const [commentText, setCommentText] = useState('');
     const [showComments, setShowComments] = useState(false);
     const [commentLoading, setCommentLoading] = useState(false);
+    const [deleting, setDeleting] = useState(false);
 
     const handleAddComment = async (e) => {
         e.preventDefault();
@@ -83,6 +85,25 @@ function Post(props){
         }
     };
 
+    const handleDelete = async () => {
+        if (!props.postId || !props.onDelete) return;
+        const confirmed = window.confirm('Are you sure you want to delete this post?');
+        if (!confirmed) return;
+        setDeleting(true);
+        try {
+            await deletePost(props.postId);
+            props.onDelete(props.postId);
+            alert('Successfully deleted this post');
+        } catch (err) {
+            console.error('Failed to delete post:', err);
+            alert(err.message);
+        } finally {
+            setDeleting(false);
+        }
+    };
+
+    const isAuthor = props.currentUserId && props.authorId && props.currentUserId === props.authorId;
+
 return(
     <Box className='container' sx={{mb:2 }}>
 
@@ -92,6 +113,16 @@ return(
         <div className='profile_list' style={{fontWeight:600, fontSize:16, margin: 0}}>{props.name}</div>
         <div className='regular' style={{ fontSize:14, color: '#5f6368', margin: 0 }}>{props.position}</div>
         </div>
+        {isAuthor && props.postId && (
+            <IconButton
+                size="small"
+                onClick={handleDelete}
+                disabled={deleting}
+                sx={{ ml: 'auto' }}
+            >
+                <DeleteIcon sx={{ fontSize: 20, color: '#d32f2f' }} />
+            </IconButton>
+        )}
         </div>
 
         <div className='postText'>

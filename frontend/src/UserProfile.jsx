@@ -56,6 +56,13 @@ export default function UserProfile({ userId, onBack, currentUserId, onConnectio
     loadUserPosts();
   }, [userId]);
 
+  const handlePostDeleted = (postId) => {
+    setPosts((prev) => prev.filter((p) => p.id !== postId));
+    if (onConnectionChange) {
+      onConnectionChange();
+    }
+  };
+
   const handleConnect = async () => {
 
     if(!connectionStatus.hasReceivedRequest){
@@ -228,6 +235,9 @@ export default function UserProfile({ userId, onBack, currentUserId, onConnectio
                 liked={post.isLiked}
                 likesCount={post.likesCount}
                 comments={post.comments}
+                authorId={post.author.id}
+                currentUserId={currentUserId}
+                onDelete={handlePostDeleted}
               />
             ))
           )}

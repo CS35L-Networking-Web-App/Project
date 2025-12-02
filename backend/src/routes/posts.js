@@ -185,4 +185,25 @@ router.post('/:postId/comments', authenticate, async (req, res) => {
   }
 });
 
+// Delete a post (only author can delete)
+router.delete('/:postId', authenticate, async (req, res) => {
+  try {
+    const post = await Post.findOne({ _id: req.params.postId });
+    if (!post) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+
+    // Only the author can delete
+    if (post.author.toString() !== req.userId) {
+      return res.status(403).json({ error: 'Not authorized to delete this post' });
+    }
+
+    await Post.deleteOne({ _id: post._id, author: req.userId });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 export default router;
