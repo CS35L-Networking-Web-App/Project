@@ -142,7 +142,7 @@ function Home() {
   }, [value, innerTab]);
 
   const handleSearch = async (query) => {
-
+    setSearchQuery(query);
     setUsersLoading(true);
     try {
       const data = await getAllUsers(query);
@@ -383,10 +383,7 @@ function Home() {
                 placeholder={innerTab === 0 ? 'Search for users by name, email, or position...' : 'Search for posts by content or author name...'}
                 value={searchQuery}
                 size="medium"
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                  handleSearch(searchQuery);}}}
+                onChange={(e) => handleSearch(e.target.value)}
                 InputProps={{
                   startAdornment:(
                     <InputAdornment position='start'>
