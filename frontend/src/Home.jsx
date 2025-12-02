@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import {Box, Stack, CircularProgress, Typography, TextField, InputAdornment, IconButton, Menu, MenuItem} from '@mui/material';
+import {Box, Stack, CircularProgress, Typography, TextField, InputAdornment, IconButton, Menu, MenuItem, Button} from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
@@ -18,10 +18,12 @@ import UserCard from './UserCard';
 import Notifications from './Notifications';
 import UserProfile from './UserProfile';
 import { getCurrentUser, getAllUsers, getConnections, getPosts } from './api.js';
+import { useNavigate } from 'react-router-dom';
 
 
 function Home() {
   document.body.style.backgroundColor = '#f5f7fa';
+  const navigate = useNavigate();
   const [value, setValue] = useState(0);
   const [user, setUser] = useState(null);
   const [allUsers, setAllUsers] = useState([]);
@@ -192,7 +194,19 @@ function Home() {
   if (!user) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
-        <p>Failed to load user data. Please try logging in again.</p>
+        <Box sx={{ textAlign: 'center', p: 3 }}>
+          <Typography variant="body1" sx={{ mb: 2 }}>Failed to load user data. Please try logging in again.</Typography>
+          <Button
+            variant="contained"
+            onClick={() => {
+              localStorage.removeItem('token');
+              localStorage.removeItem('user');
+              navigate('/');
+            }}
+          >
+            Back to Sign In
+          </Button>
+        </Box>
       </Box>
     );
   }
