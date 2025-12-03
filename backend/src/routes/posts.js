@@ -10,6 +10,8 @@ const createPostSchema = z.object({
   text: z.string().min(1, 'Post text is required').max(3000, 'Post text exceeds maximum length of 3000 characters')
 });
 
+const updatePostSchema = createPostSchema;
+
 const createCommentSchema = z.object({
   text: z.string().min(1, 'Comment text is required')
 });
@@ -373,6 +375,77 @@ router.post('/:postId/comments', authenticate, async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
+
+// Update a post (only author can edit)
+router.put('/:postId', authenticate, async (req, res) => {
+  try {
+    const parsed = updatePostSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: parsed.error.flatten() });
+    }
+
+    const post = await Post.findById(req.params.postId);
+    if (!post) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+
+    // Only the author can edit
+    if (post.author.toString() !== req.userId) {
+      return res.status(403).json({ error: 'Not authorized to edit this post' });
+    }
+
+    post.text = parsed.data.text;
+    await post.save();
+
+    // Rebuild the same shape as in GET /api/posts
+    const posts = await Post.aggregate([
+      { $match: { _id: post._id } },
+      { $lookup: { from: 'users', localField: 'author', foreignField: '_id', as: 'author' } },
+      { $unwind: '$author' },
+      { $limit: 1 }
+    ]);
+
+    if (!posts.length) {
+      return res.status(500).json({ error: 'Failed to load updated post' });
+    }
+
+    const updated = posts[0];
+
+    // gather all comment author IDs for this post
+    const authorIds = new Set();
+    collectAuthorIds(updated.comments || [], authorIds);
+
+    let userMap = new Map();
+    if (authorIds.size > 0) {
+      const users = await User.find({ _id: { $in: Array.from(authorIds) } })
+        .select('name profilePicture');
+      userMap = new Map(users.map(u => [u._id.toString(), u]));
+    }
+
+    const result = {
+      id: updated._id,
+      author: {
+        id: updated.author._id,
+        name: updated.author.name,
+        position: updated.author.position,
+        profilePicture: updated.author.profilePicture
+      },
+      text: updated.text,
+      likes: updated.likes,
+      likesCount: updated.likes.length,
+      isLiked: updated.likes.some(id => id.toString() === req.userId),
+      comments: (updated.comments || []).map(c => mapComment(c, userMap)),
+      createdAt: updated.createdAt,
+      updatedAt: updated.updatedAt
+    };
+
+    return res.json(result);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 
 // Delete a post (only author can delete)
 router.delete('/:postId', authenticate, async (req, res) => {

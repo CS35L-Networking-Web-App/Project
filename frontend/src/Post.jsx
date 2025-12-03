@@ -7,7 +7,8 @@ import ThumbUpAltIcon from '@mui/icons-material/ThumbUpAlt';
 import CommentIcon from '@mui/icons-material/Comment';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ReplyIcon from '@mui/icons-material/Reply';
-import { toggleLikePost, addComment, deletePost, deleteComment, replyToComment } from './api.js';
+import EditIcon from '@mui/icons-material/Edit';
+import { toggleLikePost, addComment, deletePost, deleteComment, replyToComment, updatePost } from './api.js';
 import default_pfp from './assets/default_pfp.svg';
 
 
@@ -67,6 +68,10 @@ function Post(props){
     const [commentText, setCommentText] = useState('');
     const [showComments, setShowComments] = useState(false);
     const [commentLoading, setCommentLoading] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editText, setEditText] = useState(props.text || '');
+    const [editSaving, setEditSaving] = useState(false);
+    const [postText, setPostText] = useState(props.text || '');
     const [deleting, setDeleting] = useState(false);
     const [commentActionId, setCommentActionId] = useState(null);
     const [replyTexts, setReplyTexts] = useState({});
@@ -152,14 +157,40 @@ function Post(props){
         }
     };
 
-    const authorClickable = !!(props.onAuthorClick && props.authorId);
-    const isAuthor = props.currentUserId && props.authorId && props.currentUserId === props.authorId;
+       const handleStartEdit = () => {
+        setEditText(props.text || '');
+        setIsEditing(true);
+    };
 
-    const handleAuthorClick = () => {
-        if (authorClickable) {
-            props.onAuthorClick(props.authorId);
+    const handleCancelEdit = () => {
+        setIsEditing(false);
+        setEditText(props.text || '');
+    };
+
+    const handleSaveEdit = async () => {
+        if (!props.postId) return;
+        const trimmed = (editText || '').trim();
+        if (!trimmed || trimmed === props.text) {
+            setIsEditing(false);
+            return;
+        }
+
+        setEditSaving(true);
+        try {
+            const updated = await updatePost(props.postId, trimmed);
+            if (props.onUpdate) {
+                props.onUpdate(updated);
+            }
+            setIsEditing(false);
+        } catch (err) {
+            console.error('Failed to update post:', err);
+            alert(err.message || 'Failed to update post');
+        } finally {
+            setEditSaving(false);
         }
     };
+
+    const isAuthor = props.currentUserId && props.authorId && props.currentUserId === props.authorId;
 
     const renderComment = (comment, depth = 0) => {
         const isCommentAuthor = props.currentUserId && comment.author?.id === props.currentUserId;
@@ -257,36 +288,71 @@ return(
     <Box className='container' sx={{mb:2 }}>
 
         <div className='header'>
-        <div
-          className='list_image'
-          onClick={handleAuthorClick}
-          style={{ cursor: authorClickable ? 'pointer' : 'default' }}
-        >
-          <img  src={props.pic}/>
-        </div>
-        <div
-          className='user'
-          onClick={handleAuthorClick}
-          style={{ cursor: authorClickable ? 'pointer' : 'default' }}
-        >
+        <div className='list_image'> <img  src={props.pic}/> </div>
+        <div className='user'>
         <div className='profile_list' style={{fontWeight:600, fontSize:16, margin: 0}}>{props.name}</div>
         <div className='regular' style={{ fontSize:14, color: '#5f6368', margin: 0 }}>{props.position}</div>
         </div>
-        {isAuthor && props.postId && (
-            <IconButton
-                size="small"
-                onClick={handleDelete}
-                disabled={deleting}
-                sx={{ ml: 'auto' }}
-            >
-                <DeleteIcon sx={{ fontSize: 20, color: '#d32f2f' }} />
-            </IconButton>
+                {isAuthor && props.postId && (
+            <>
+                <IconButton
+                    size="small"
+                    onClick={handleStartEdit}
+                    sx={{ ml: 'auto', mr: 1 }}
+                >
+                    <EditIcon sx={{ fontSize: 20, color: '#5f6368' }} />
+                </IconButton>
+                <IconButton
+                    size="small"
+                    onClick={handleDelete}
+                    disabled={deleting}
+                >
+                    <DeleteIcon sx={{ fontSize: 20, color: '#d32f2f' }} />
+                </IconButton>
+            </>
         )}
+
         </div>
 
-        <div className='postText'>
-            {props.text}
+                <div className='postText'>
+            {isEditing ? (
+                <>
+                    <TextField
+                        fullWidth
+                        multiline
+                        minRows={2}
+                        maxRows={8}
+                        value={editText}
+                        onChange={(e) => setEditText(e.target.value)}
+                        sx={{ mb: 1 }}
+                    />
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+                        <Button
+                            variant="text"
+                            onClick={handleCancelEdit}
+                            disabled={editSaving}
+                            sx={{ textTransform: 'none' }}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="contained"
+                            onClick={handleSaveEdit}
+                            disabled={editSaving || !editText.trim()}
+                            sx={{
+                                textTransform: 'none',
+                                fontWeight: 600
+                            }}
+                        >
+                            {editSaving ? 'Saving...' : 'Save'}
+                        </Button>
+                    </Box>
+                </>
+            ) : (
+                props.text
+            )}
         </div>
+
 
         <div className='bottom'>
            <LikeButton liked={props.liked} postId={props.postId} likesCount={props.likesCount} />

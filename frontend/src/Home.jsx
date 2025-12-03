@@ -199,6 +199,13 @@ function Home() {
     setProfilePosts((prev) => prev.filter((p) => p.id !== postId));
   };
 
+    const handlePostUpdated = (updatedPost) => {
+    setPosts((prev) => prev.map((p) => p.id === updatedPost.id ? updatedPost : p));
+    setFoundPosts((prev) => prev.map((p) => p.id === updatedPost.id ? updatedPost : p));
+    setProfilePosts((prev) => prev.map((p) => p.id === updatedPost.id ? updatedPost : p));
+  };
+
+
   const handleUserClick = (userId) => {
     if (user && userId === user.id) {
       // Navigate to my profile tab for self
@@ -381,6 +388,7 @@ function Home() {
                   authorId={post.author.id}
                   currentUserId={user.id}
                   onDelete={handlePostDeleted}
+                  onUpdate={handlePostUpdated}
                   onAuthorClick={handleUserClick}
                 />
               ))
