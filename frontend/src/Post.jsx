@@ -152,7 +152,14 @@ function Post(props){
         }
     };
 
+    const authorClickable = !!(props.onAuthorClick && props.authorId);
     const isAuthor = props.currentUserId && props.authorId && props.currentUserId === props.authorId;
+
+    const handleAuthorClick = () => {
+        if (authorClickable) {
+            props.onAuthorClick(props.authorId);
+        }
+    };
 
     const renderComment = (comment, depth = 0) => {
         const isCommentAuthor = props.currentUserId && comment.author?.id === props.currentUserId;
@@ -250,8 +257,18 @@ return(
     <Box className='container' sx={{mb:2 }}>
 
         <div className='header'>
-        <div className='list_image'> <img  src={props.pic}/> </div>
-        <div className='user'>
+        <div
+          className='list_image'
+          onClick={handleAuthorClick}
+          style={{ cursor: authorClickable ? 'pointer' : 'default' }}
+        >
+          <img  src={props.pic}/>
+        </div>
+        <div
+          className='user'
+          onClick={handleAuthorClick}
+          style={{ cursor: authorClickable ? 'pointer' : 'default' }}
+        >
         <div className='profile_list' style={{fontWeight:600, fontSize:16, margin: 0}}>{props.name}</div>
         <div className='regular' style={{ fontSize:14, color: '#5f6368', margin: 0 }}>{props.position}</div>
         </div>

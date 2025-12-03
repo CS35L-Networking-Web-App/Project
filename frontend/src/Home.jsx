@@ -101,8 +101,8 @@ function Home() {
              } finally {
               setUsersLoading(false);
             }
-          }
-        }
+    }
+  }
 
   useEffect(() => {
     async function loadFoundPosts() {
@@ -180,7 +180,20 @@ function Home() {
 
   const handleBackFromProfile = () => {
     setViewingUserId(null);
-    loadFoundPosts();
+    if (value === 2 && innerTab === 1) {
+      // refresh search results if we were on search posts view
+      (async () => {
+        setFoundPostsLoading(true);
+        try {
+          const data = await getPosts(searchQuery);
+          setFoundPosts(data.posts || []);
+        } catch (err) {
+          console.error('Failed to load posts:', err);
+        } finally {
+          setFoundPostsLoading(false);
+        }
+      })();
+    }
   };
 
   if (loading) {
@@ -295,44 +308,54 @@ function Home() {
         </Box>
       </Box>
       <TabPanel value={value} index={0}>
-        <Box sx={{ maxWidth: 800, margin: '0 auto' }}>
-          <NewPost name={user.name} position={user.position} pic={userPfp} onPostCreated={handlePostCreated} />
-          {postsLoading ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-              <CircularProgress />
-            </Box>
-          ) : posts.length === 0 ? (
-            <Box sx={{
-              textAlign: 'center',
-              p: 6,
-              backgroundColor: 'white',
-              borderRadius: 3,
-              boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
-            }}>
-              <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>No posts yet</Typography>
-              <Typography variant="body2" color="text.secondary">
-                Be the first to share something!
-              </Typography>
-            </Box>
-          ) : (
-            posts.map(post => (
-              <Post
-                key={post.id}
-                postId={post.id}
-                name={post.author.name}
-                text={post.text}
-                position={post.author.position}
-                pic={post.author.profilePicture || userPfp}
-                liked={post.isLiked}
-                likesCount={post.likesCount}
-                comments={post.comments}
-                authorId={post.author.id}
-                currentUserId={user.id}
-                onDelete={handlePostDeleted}
-              />
-            ))
-          )}
-        </Box>
+        {viewingUserId ? (
+          <UserProfile
+            userId={viewingUserId}
+            onBack={handleBackFromProfile}
+            onConnectionChange={handleConnectionChange}
+            currentUserId={user?.id}
+          />
+        ) : (
+          <Box sx={{ maxWidth: 800, margin: '0 auto' }}>
+            <NewPost name={user.name} position={user.position} pic={userPfp} onPostCreated={handlePostCreated} />
+            {postsLoading ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+                <CircularProgress />
+              </Box>
+            ) : posts.length === 0 ? (
+              <Box sx={{
+                textAlign: 'center',
+                p: 6,
+                backgroundColor: 'white',
+                borderRadius: 3,
+                boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
+              }}>
+                <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>No posts yet</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Be the first to share something!
+                </Typography>
+              </Box>
+            ) : (
+              posts.map(post => (
+                <Post
+                  key={post.id}
+                  postId={post.id}
+                  name={post.author.name}
+                  text={post.text}
+                  position={post.author.position}
+                  pic={post.author.profilePicture || userPfp}
+                  liked={post.isLiked}
+                  likesCount={post.likesCount}
+                  comments={post.comments}
+                  authorId={post.author.id}
+                  currentUserId={user.id}
+                  onDelete={handlePostDeleted}
+                  onAuthorClick={handleUserClick}
+                />
+              ))
+            )}
+          </Box>
+        )}
       </TabPanel>
       <TabPanel value={value} index={1}>
         <Box sx={{ maxWidth: 800, margin: '0 auto' }}>
@@ -456,6 +479,7 @@ function Home() {
                 authorId={post.author.id}
                 currentUserId={user.id}
                 onDelete={handlePostDeleted}
+                onAuthorClick={handleUserClick}
               />
             ))
             )}
