@@ -30,6 +30,8 @@ function Home() {
   const [connections, setConnections] = useState([]);
   const [posts, setPosts] = useState([]);
   const [foundPosts, setFoundPosts] = useState([]);
+  const [profilePosts, setProfilePosts] = useState([]);
+  const [profilePostsLoading, setProfilePostsLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [usersLoading, setUsersLoading] = useState(false);
   const [connectionsLoading, setConnectionsLoading] = useState(false);
@@ -89,6 +91,24 @@ function Home() {
     }
     loadPosts();
   }, [value]);
+
+  useEffect(() => {
+    async function loadProfilePosts() {
+      if (value === 3) {
+        setProfilePostsLoading(true);
+        try {
+          const data = await getPosts('');
+          const ownPosts = (data.posts || []).filter(p => p.author.id === user?.id);
+          setProfilePosts(ownPosts);
+        } catch (err) {
+          console.error('Failed to load profile posts:', err);
+        } finally {
+          setProfilePostsLoading(false);
+        }
+      }
+    }
+    loadProfilePosts();
+  }, [value, user?.id]);
 
   async function loadUsers() {
       if (value == 2 && innerTab==0){ // Search tab, keep previous searches when switching between tabs
@@ -164,6 +184,10 @@ function Home() {
     try {
       const data = await getPosts('');
       setPosts(data.posts || []);
+      if (value === 3) {
+        const own = (data.posts || []).filter(p => p.author.id === user?.id);
+        setProfilePosts(own);
+      }
     } catch (err) {
       console.error('Failed to reload posts:', err);
     }
@@ -172,6 +196,7 @@ function Home() {
   const handlePostDeleted = (postId) => {
     setPosts((prev) => prev.filter((p) => p.id !== postId));
     setFoundPosts((prev) => prev.filter((p) => p.id !== postId));
+    setProfilePosts((prev) => prev.filter((p) => p.id !== postId));
   };
 
   const handleUserClick = (userId) => {
@@ -497,12 +522,40 @@ function Home() {
                 setUser({ ...user, ...updatedProfile });
               }}
             />
-            <Stack direction="column" spacing={2} alignItems="stretch" sx={{ flex: 1 }}>
+          <Stack direction="column" spacing={2} alignItems="stretch" sx={{ flex: 1 }}>
                  <NewPost name={user.name} position={user.position} pic={userPfp} onPostCreated={handlePostCreated}/>
-                 {user.about && <Post name={user.name} text={user.about} position={user.position} pic={userPfp} liked={false}/>}
-            </Stack>
-          </Stack>
-        </Box>
+                 {profilePostsLoading ? (
+                   <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+                     <CircularProgress />
+                   </Box>
+                 ) : profilePosts.length === 0 ? (
+                   <Box sx={{ textAlign: 'center', p: 3 }}>
+                     <Typography variant="body2" color="text.secondary">
+                       You have no posts yet
+                     </Typography>
+                   </Box>
+                 ) : (
+                   profilePosts.map(post => (
+                     <Post
+                       key={post.id}
+                       postId={post.id}
+                       name={post.author.name}
+                       text={post.text}
+                       position={post.author.position}
+                       pic={post.author.profilePicture || userPfp}
+                       liked={post.isLiked}
+                       likesCount={post.likesCount}
+                       comments={post.comments}
+                       authorId={post.author.id}
+                       currentUserId={user.id}
+                       onDelete={handlePostDeleted}
+                       onAuthorClick={handleUserClick}
+                     />
+                   ))
+                 )}
+           </Stack>
+         </Stack>
+       </Box>
       </TabPanel>
       </Box>
     </Box>
