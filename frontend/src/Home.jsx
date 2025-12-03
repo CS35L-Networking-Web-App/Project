@@ -61,6 +61,11 @@ function Home() {
     window.location.href = '/'; // Redirect to login page
   };
 
+  const handleLogoClick = () => {
+    setValue(0);
+    setViewingUserId(null);
+  };
+
   useEffect(() => {
     async function loadUser() {
       try {
@@ -281,7 +286,13 @@ function Home() {
         py: 1,
         boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
       }}>
-        <Box sx={{ flexGrow: 1 }} />
+        <Box
+          sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexGrow: 1, cursor: 'pointer' }}
+          onClick={handleLogoClick}
+        >
+          <span className="logo-dot" />
+          <Typography variant="h6" sx={{ fontWeight: 700, color: '#0b3c99' }}>LinkU</Typography>
+        </Box>
         <Tabs
           value={value}
           onChange={handleChange}

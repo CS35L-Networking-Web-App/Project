@@ -6,26 +6,47 @@ import { formSchema } from "./utilities.jsx";
 import { loginUser } from "./api.js";
 import { Eye, EyeOff } from "lucide-react";
 
+const HERO_IMAGE = "https://s3.amazonaws.com/cms.ipressroom.com/173/files/20198/5d72b4772cfac209ff04c634_Royce+Quad/Royce+Quad_hero.jpg";
+
 export default function SignIn(){
   return(
-    <div className='flex items-center justify-center min-h-screen'>
-      <div className='flex flex-col w-full max-w-xs mx-auto'>
-      <SignInForm/> 
-      <SignUpButton/> 
-      </div>
+    <div className="auth-page-wrapper">
+      <header className="top-nav">
+        <div className="logo-mark">
+          <span className="logo-dot" />
+          <span className="logo-text">LinkU</span>
+        </div>
+        <button
+          className="nav-link"
+          onClick={() => window.location.href = '/signup'}
+        >
+          Sign up
+        </button>
+      </header>
+
+      <main className="auth-page">
+        <section className="hero">
+          <div className="hero-copy">
+            <h1>Welcome to LinkU</h1>
+            <p>Connect with students, alumni, and opportunities in one place.</p>
+            <ul>
+              <li>Discover internships</li>
+              <li>Build your network</li>
+              <li>Showcase your profile</li>
+            </ul>
+          </div>
+          <div className="hero-illustration">
+            <img src={HERO_IMAGE} alt="Campus" />
+          </div>
+        </section>
+
+        <section className="auth-card">
+          <SignInForm/> 
+        </section>
+      </main>
     </div>
   );
 }
-
-const SignUpButton = () =>{
-const navigate = useNavigate();
-  return (
-      <button className='w-full text-white bg-indigo-500 hover:bg-indigo-700 rounded-lg px-5 py-2.5 mt-10'
-      onClick={() => navigate("/signup")}
-      >Sign Up
-      </button>
-  );
-};
 
 const SignInForm = () =>{
 
@@ -126,6 +147,16 @@ const onSubmit = async ({ email, password }) => {
       >
         {isSubmitting ? "Signing in..." : "Sign in"}
       </button>
+      <div className="text-center text-sm text-gray-600">
+        Not a user?{" "}
+        <button
+          type="button"
+          className="text-indigo-600 hover:underline font-semibold"
+          onClick={() => navigate("/signup")}
+        >
+          Sign up here
+        </button>
+      </div>
      </form>  
   );
 };

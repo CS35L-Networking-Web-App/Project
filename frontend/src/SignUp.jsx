@@ -44,15 +44,18 @@ export default function SignUp(){
  const passwordValue = useWatch({ control, name: "password", defaultValue: "" }) || "";
  const confirmValue = useWatch({ control, name: "confirmPassword", defaultValue: "" }) || "";
 
- const passwordChecks = [
+const passwordChecks = [
   { label: "At least 8 characters", ok: passwordValue.length >= 8 },
   { label: "Contains uppercase letter", ok: /[A-Z]/.test(passwordValue) },
   { label: "Contains number", ok: /[0-9]/.test(passwordValue) },
   { label: "Contains special character", ok: /[^A-Za-z0-9]/.test(passwordValue) },
   { label: "Passwords match", ok: confirmValue.length > 0 && passwordValue === confirmValue },
  ];
- const statusColor = (ok) => ok ? "text-green-600" : "text-red-600";
- const statusIcon = (ok) => ok ? "✓" : "✗";
+ const hasPasswordInput = passwordValue.length > 0 || confirmValue.length > 0;
+ const ruleStyle = (ok) => {
+  if (!hasPasswordInput) return { icon: "•", color: "text-gray-500" };
+  return { icon: ok ? "✓" : "✗", color: ok ? "text-green-600" : "text-red-600" };
+ };
 
  const onSubmit = async ({ name, email, password, confirmPassword}) => {
   try {
@@ -73,11 +76,27 @@ export default function SignUp(){
 };
 
     return (
-    <div className='flex items-center justify-center min-h-screen'>
-    <form
-     className="p-6 space-y-4 bg-white rounded-lg shadow w-full max-w-sm"
-     onSubmit={handleSubmit(onSubmit)}>
-      <h1 className="text-2xl font-semibold mb-4">Join now!</h1>
+    <div className="auth-page-wrapper">
+      <header className="top-nav">
+        <div className="logo-mark">
+          <span className="logo-dot" />
+          <span className="logo-text">LinkU</span>
+        </div>
+        <button
+          className="nav-link"
+          onClick={() => navigate("/")}
+          type="button"
+        >
+          Sign in
+        </button>
+      </header>
+
+      <div className="signup-page">
+      <form
+       className="p-6 space-y-4 bg-white rounded-lg shadow w-full max-w-sm"
+       onSubmit={handleSubmit(onSubmit)}>
+        <h1 className="text-2xl font-semibold mb-2">Join now!</h1>
+        <p className="text-gray-600 text-sm mb-2">Create your LinkU account to connect with students and alumni.</p>
 
       {/* Name */}
       <div>
@@ -132,12 +151,17 @@ export default function SignUp(){
         >
           {showPassword ? <EyeOff size={23} /> : <Eye size={23} />}
         </button>
-        <div className="mt-2 text-sm space-y-1">
-          {passwordChecks.map((rule) => (
-            <div key={rule.label} className={statusColor(rule.ok)}>
-              {statusIcon(rule.ok)} {rule.label}
-            </div>
-          ))}
+        <div className="mt-3 text-sm space-y-1">
+          <div className="text-gray-600 font-medium mb-1">Your password must contain:</div>
+          {passwordChecks.map((rule) => {
+            const style = ruleStyle(rule.ok);
+            return (
+              <div key={rule.label} className={`flex items-center gap-2 ${style.color}`}>
+                <span>{style.icon}</span>
+                <span>{rule.label}</span>
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -174,7 +198,19 @@ export default function SignUp(){
       className="w-full text-white bg-blue-600 hover:bg-blue-700 rounded-lg px-5 py-2.5"
       disabled={isSubmitting || success}
       >Sign Up</button>
+
+      <div className="text-center text-sm text-gray-600">
+        Already have an account?{" "}
+        <button
+          type="button"
+          className="text-indigo-600 hover:underline font-semibold"
+          onClick={() => navigate("/")}
+        >
+          Sign in
+        </button>
+      </div>
      </form>     
+    </div>
     </div>
   );
 };
