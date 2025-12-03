@@ -240,14 +240,6 @@ body {
     margin-left: 12px;
 }
 
-/* List Item */
-.item {
-    padding: 16px;
-    border-bottom: 1px solid #e8e8e8;
-    background-color: white;
-    margin-bottom: 0;
-}
-
 .item:last-child {
     border-bottom: none;
 }
