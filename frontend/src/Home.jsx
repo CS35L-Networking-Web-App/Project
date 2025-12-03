@@ -17,7 +17,7 @@ import NewPost from './newPost';
 import UserCard from './UserCard';
 import Notifications from './Notifications';
 import UserProfile from './UserProfile';
-import { getCurrentUser, getAllUsers, getConnections, getPosts } from './api.js';
+import { getCurrentUser, getAllUsers, getConnections, getPosts, getConnectionsPosts } from './api.js';
 import { useNavigate } from 'react-router-dom';
 
 
@@ -41,7 +41,10 @@ function Home() {
   const [viewingUserId, setViewingUserId] = useState(null);
   const [accountMenuAnchor, setAccountMenuAnchor] = useState(null);
   const [innerTab, setInnerTab] = useState(0);
+  const [innerHomeTab, setInnerHomeTab] = useState(0);
   const [updateNotifs, setUpdateNotifs] = useState(0);
+  const [connectionsPostsLoading, setConnectionsPostsLoading] = useState(false);
+  const [connectionsPosts, setConnectionsPosts] = useState([]);
 
   const handleChange = (event, newValue) => {
     setValue(newValue);
@@ -82,7 +85,7 @@ function Home() {
 
   useEffect(() => {
     async function loadPosts() {
-      if (value === 0){ // Home tab is 0
+      if (value === 0 && innerHomeTab==0){ // Home tab is 0
         setPostsLoading(true);
         try {
           const data = await getPosts('');
@@ -95,7 +98,24 @@ function Home() {
       }
     }
     loadPosts();
-  }, [value]);
+  }, [value, innerHomeTab]);
+
+    useEffect(() => {
+    async function loadConnectionsPosts() {
+      if (value === 0 && innerHomeTab==1){ // Home tab is 0
+        setConnectionsPostsLoading(true);
+        try {
+          const data = await getConnectionsPosts();
+          setConnectionsPosts(data.posts || []);
+        } catch (err) {
+          console.error('Failed to load posts:', err);
+        } finally {
+          setConnectionsPostsLoading(false);
+        }
+      }
+    }
+    loadConnectionsPosts();
+  }, [value, innerHomeTab]);
 
   useEffect(() => {
     async function loadProfilePosts() {
@@ -149,7 +169,7 @@ function Home() {
 
   useEffect(() => {
     async function loadConnections() {
-      if (value === 1 ) { // My Network tab
+      if (value === 1 || (value == 0 && innerHomeTab == 1)) { // My Network tab
         setConnectionsLoading(true);
         try {
           const data = await getConnections();
@@ -162,7 +182,7 @@ function Home() {
       }
     }
     loadConnections();
-  }, [value]);
+  }, [value, innerHomeTab]);
 
   const handleConnectionChange = () => {
     // Reload connections when a new connection is made
@@ -356,57 +376,103 @@ function Home() {
           </Menu>
         </Box>
       </Box>
-      <TabPanel value={value} index={0}>
-        {viewingUserId ? (
-          <UserProfile
-            userId={viewingUserId}
-            onBack={handleBackFromProfile}
-            onConnectionChange={handleConnectionChange}
-            currentUserId={user?.id}
-          />
-        ) : (
-          <Box sx={{ maxWidth: 800, margin: '0 auto' }}>
-            <NewPost name={user.name} position={user.position} pic={userPfp} onPostCreated={handlePostCreated} />
-            {postsLoading ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-                <CircularProgress />
-              </Box>
-            ) : posts.length === 0 ? (
-              <Box sx={{
-                textAlign: 'center',
-                p: 6,
-                backgroundColor: 'white',
-                borderRadius: 3,
-                boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
-              }}>
-                <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>No posts yet</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Be the first to share something!
-                </Typography>
-              </Box>
-            ) : (
-              posts.map(post => (
-                <Post
-                  key={post.id}
-                  postId={post.id}
-                  name={post.author.name}
-                  text={post.text}
-                  position={post.author.position}
-                  pic={post.author.profilePicture || default_pfp}
-                  liked={post.isLiked}
-                  likesCount={post.likesCount}
-                  comments={post.comments}
-                  authorId={post.author.id}
-                  currentUserId={user.id}
-                  onDelete={handlePostDeleted}
-                  onUpdate={handlePostUpdated}
-                  onAuthorClick={handleUserClick}
-                />
-              ))
-            )}
-          </Box>
-        )}
+        <Box sx={{ maxWidth: 800, margin: '0 auto' }}>
+        <TabPanel value={value} index={0}>
+        <Tabs value={innerHomeTab} onChange={(e, newVal) => {setInnerHomeTab(newVal)}} sx={{ mb:1.5, ml:3, display: 'flex', mt:-1, '& .MuiTab-root': {textTransform: 'none', fontSize: '15px'}}}>
+          <Tab label="New" />
+          <Tab label="Connections"/>
+          </Tabs>
+          <TabPanel value={innerHomeTab} index={0}>
+          <NewPost name={user.name} position={user.position} pic={userPfp} onPostCreated={handlePostCreated} />
+          {postsLoading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+              <CircularProgress />
+            </Box>
+          ) : posts.length === 0 ? (
+            <Box sx={{
+              textAlign: 'center',
+              p: 6,
+              backgroundColor: 'white',
+              borderRadius: 3,
+              boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
+            }}>
+              <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>No posts yet</Typography>
+              <Typography variant="body2" color="text.secondary">
+                Be the first to share something!
+              </Typography>
+            </Box>
+          ) : (
+            posts.map(post => (
+              <Post
+                key={post.id}
+                postId={post.id}
+                name={post.author.name}
+                text={post.text}
+                position={post.author.position}
+                pic={post.author.profilePicture || userPfp}
+                liked={post.isLiked}
+                likesCount={post.likesCount}
+                comments={post.comments}
+                authorId={post.author.id}
+                currentUserId={user.id}
+                onUpdate={handlePostUpdated}
+                onDelete={handlePostDeleted}
+                onAuthorClick={handleUserClick}
+              />
+            ))
+          )}
+        </TabPanel>
+        <TabPanel value={innerHomeTab} index={1}>
+          <NewPost name={user.name} position={user.position} pic={userPfp} onPostCreated={handlePostCreated} />
+          {connectionsPostsLoading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+              <CircularProgress />
+            </Box>
+          ) : connectionsPosts.length === 0 ? (
+           <Box sx={{
+              textAlign: 'center',
+              p: 6,
+              backgroundColor: 'white',
+              borderRadius: 3,
+              boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
+            }}>
+             {connections.length === 0 ? (
+              <>
+            <Typography variant="h6" color="text.secondary">No connections yet</Typography>
+            <Typography variant="body2" color="text.secondary">
+              Search for users and send connection requests to build your network!
+            </Typography>
+            </>
+        ) : ( <>
+              <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>No posts yet</Typography>
+              <Typography variant="body2" color="text.secondary">
+                Your connections haven't posted yet.
+              </Typography>
+              </>
+              )}
+              </Box>):(
+            <Box>
+              {connectionsPosts.map(post => (
+              <Post
+                key={post.id}
+                postId={post.id}
+                name={post.author.name}
+                text={post.text}
+                position={post.author.position}
+                pic={post.author.profilePicture || userPfp}
+                liked={post.isLiked}
+                likesCount={post.likesCount}
+                comments={post.comments}
+                authorId={post.author.id}
+                currentUserId={user.id}
+                onDelete={handlePostDeleted}
+                onAuthorClick={handleUserClick}
+              />
+            ))}</Box>
+          )}
       </TabPanel>
+      </TabPanel>
+       </Box>
       <TabPanel value={value} index={1}>
         <Box sx={{ maxWidth: 800, margin: '0 auto' }}>
         {viewingUserId ? (

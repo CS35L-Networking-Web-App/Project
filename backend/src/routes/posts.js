@@ -307,6 +307,63 @@ router.get('/', authenticate, async (req, res) => {
   }
 });
 
+
+// Get posts of all connections
+router.get('/connections', authenticate, async (req, res) => {
+  try {
+    const currentUser = await User.findById(req.userId).select('connections');
+
+    if (!currentUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const connections = currentUser.connections;
+    
+    const posts = await Post.aggregate([
+      { $lookup: { from: 'users', localField: 'author', foreignField: '_id', as: 'author' } },
+      { $unwind: '$author' },
+      { $match: { 'author._id': {$in: connections}}},
+      { $sort: { createdAt: -1 } },
+      { $limit: 100 }
+    ]);
+
+     // gather all comment author IDs across posts
+    const authorIds = new Set();
+    for (const post of posts) {
+      collectAuthorIds(post.comments || [], authorIds);
+    }
+
+    let userMap = new Map();
+    if (authorIds.size > 0) {
+      const users = await User.find({ _id: { $in: Array.from(authorIds) } })
+        .select('name profilePicture');
+      userMap = new Map(users.map(u => [u._id.toString(), u]));
+    }
+
+    const postsWithDetails = posts.map(post => ({
+      id: post._id,
+      author: {
+        id: post.author._id,
+        name: post.author.name,
+        position: post.author.position,
+        profilePicture: post.author.profilePicture
+      },
+      text: post.text,
+      likes: post.likes,
+      likesCount: post.likes.length,
+      isLiked: post.likes.some(id => id.toString() === req.userId),
+      comments: (post.comments || []).map(c => mapComment(c, userMap)),
+      createdAt: post.createdAt,
+      updatedAt: post.updatedAt
+    }));
+    res.json({ posts: postsWithDetails });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+  });
+
+
 // Like/Unlike a post
 router.post('/:postId/like', authenticate, async (req, res) => {
   try {

@@ -351,6 +351,28 @@ export async function getPosts(searchQuery = '') {
   return res.json();
 }
 
+// Get Posts of Connections
+export async function getConnectionsPosts() {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    throw new Error('Not authenticated');
+  }
+
+  const res = await fetch(`${API_BASE}/api/posts/connections`, {
+    method: "GET",
+    headers: {
+      "Authorization": `Bearer ${token}`
+    }
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => null);
+    throw new Error(extractErrorMessage(err, "Failed to fetch posts"));
+  }
+
+  return res.json();
+}
+
 // Like/Unlike Post
 export async function toggleLikePost(postId) {
   const token = localStorage.getItem('token');
