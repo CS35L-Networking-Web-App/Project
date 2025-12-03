@@ -200,7 +200,13 @@ function Home() {
   };
 
   const handleUserClick = (userId) => {
-    setViewingUserId(userId);
+    if (user && userId === user.id) {
+      // Navigate to my profile tab for self
+      setValue(3);
+      setViewingUserId(null);
+    } else {
+      setViewingUserId(userId);
+    }
   };
 
   const handleBackFromProfile = () => {
@@ -368,7 +374,7 @@ function Home() {
                   name={post.author.name}
                   text={post.text}
                   position={post.author.position}
-                  pic={post.author.profilePicture || userPfp}
+                  pic={post.author.profilePicture || default_pfp}
                   liked={post.isLiked}
                   likesCount={post.likesCount}
                   comments={post.comments}
@@ -497,7 +503,7 @@ function Home() {
                 name={post.author.name}
                 text={post.text}
                 position={post.author.position}
-                pic={post.author.profilePicture || userPfp}
+                pic={post.author.profilePicture || default_pfp}
                 liked={post.isLiked}
                 likesCount={post.likesCount}
                 comments={post.comments}
@@ -542,7 +548,7 @@ function Home() {
                        name={post.author.name}
                        text={post.text}
                        position={post.author.position}
-                       pic={post.author.profilePicture || userPfp}
+                       pic={post.author.profilePicture || default_pfp}
                        liked={post.isLiked}
                        likesCount={post.likesCount}
                        comments={post.comments}
