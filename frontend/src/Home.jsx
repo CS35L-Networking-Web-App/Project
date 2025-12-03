@@ -100,8 +100,7 @@ function Home() {
     loadPosts();
   }, [value, innerHomeTab]);
 
-    useEffect(() => {
-    async function loadConnectionsPosts() {
+  async function loadConnectionsPosts() {
       if (value === 0 && innerHomeTab==1){ // Home tab is 0
         setConnectionsPostsLoading(true);
         try {
@@ -114,6 +113,8 @@ function Home() {
         }
       }
     }
+
+    useEffect(() => {
     loadConnectionsPosts();
   }, [value, innerHomeTab]);
 
@@ -146,8 +147,8 @@ function Home() {
              } finally {
               setUsersLoading(false);
             }
-    }
-  }
+          }
+        }
 
   useEffect(() => {
     async function loadFoundPosts() {
@@ -195,8 +196,21 @@ function Home() {
           console.error('Failed to reload connections:', err);
         }
       }
-      reloadConnections();
+       reloadConnections();
     }
+
+     if (value == 0 && innerHomeTab == 1){
+      async function reloadConnections() {
+        try {
+          const data = await getConnections();
+          setConnections(data.connections || []);
+        } catch (err) {
+          console.error('Failed to reload connections:', err);
+        }
+      }
+      reloadConnections();
+      loadConnectionsPosts();
+     }
 
      if(value == 2 && innerTab==0){ 
       setUpdateNotifs(prev => !prev);
@@ -222,12 +236,14 @@ function Home() {
     setPosts((prev) => prev.filter((p) => p.id !== postId));
     setFoundPosts((prev) => prev.filter((p) => p.id !== postId));
     setProfilePosts((prev) => prev.filter((p) => p.id !== postId));
+    setConnectionsPosts((prev) => prev.filter((p) => p.id !== postId));
   };
 
     const handlePostUpdated = (updatedPost) => {
     setPosts((prev) => prev.map((p) => p.id === updatedPost.id ? updatedPost : p));
     setFoundPosts((prev) => prev.map((p) => p.id === updatedPost.id ? updatedPost : p));
     setProfilePosts((prev) => prev.map((p) => p.id === updatedPost.id ? updatedPost : p));
+    setConnectionPosts((prev) => prev.map((p) => p.id === updatedPost.id ? updatedPost : p));
   };
 
 
