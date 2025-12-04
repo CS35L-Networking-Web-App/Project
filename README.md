@@ -53,8 +53,7 @@ VITE_API_BASE_URL=http://localhost:4000
 
 ## Install:
 Run `setup.sh` for a one-step setup. If you prefer doing it manually, run the following commands from the repo root:
-```
-bash
+```bash
 cd backend && npm install
 cd ../frontend && npm install
 cd ..
@@ -62,7 +61,7 @@ cd ..
 
 ## Run(dev):
 At repo root:
-```
+```bash
 ./dev.sh
 ```
 
@@ -72,7 +71,7 @@ This starts Backend on http://localhost:4000 and Frontend on http://localhost:51
 We use Playwright E2E tests:
 
 1. Install test deps in repo root:
-```
+```bash
 npm install -D @playwright/test
 npx playwright install
 ```
