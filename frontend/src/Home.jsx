@@ -11,7 +11,6 @@ import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import './styles.css';
 import { TabPanel } from './utilities.jsx';
 import Profile from './Profile'
-import default_pfp from './assets/default_pfp.svg';
 import Post from './Post';
 import NewPost from './newPost';
 import UserCard from './UserCard';
@@ -19,7 +18,7 @@ import Notifications from './Notifications';
 import UserProfile from './UserProfile';
 import { getCurrentUser, getAllUsers, getConnections, getPosts, getConnectionsPosts } from './api.js';
 import { useNavigate } from 'react-router-dom';
-
+const default_pfp = "https://cpng.pikpng.com/pngl/s/80-805068_my-profile-icon-blank-profile-picture-circle-clipart.png"
 
 function Home() {
   document.body.style.backgroundColor = '#f5f7fa';

@@ -13,7 +13,7 @@ import {
 } from '@mui/material';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import { getConnectionRequests, acceptConnectionRequest, rejectConnectionRequest } from './api.js';
-import default_pfp from './assets/default_pfp.svg';
+const default_pfp = "https://cpng.pikpng.com/pngl/s/80-805068_my-profile-icon-blank-profile-picture-circle-clipart.png"
 
 export default function Notifications({ onRequestAccepted, updateNotifs, onRequestRejected }) {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -127,7 +127,7 @@ export default function Notifications({ onRequestAccepted, updateNotifs, onReque
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                   <Avatar
                     src={request.from.profilePicture || default_pfp}
-                    sx={{ width: 40, height: 40, mr: 1.5 }}
+                    sx={{ width: 40, height: 40, mr: 1.5, '& img': {transform: 'scale(1.02)'}}}
                   />
                   <Box sx={{ flex: 1 }}>
                     <Typography variant="subtitle2">{request.from.name}</Typography>

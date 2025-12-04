@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Card, CardContent, Avatar, Button, Typography, Box } from '@mui/material';
 import { getButtonConfig } from './utilities.jsx';
 import { sendConnectionRequest, acceptConnectionRequest } from './api.js';
-import default_pfp from './assets/default_pfp.svg';
+const default_pfp = "https://cpng.pikpng.com/pngl/s/80-805068_my-profile-icon-blank-profile-picture-circle-clipart.png"
 
 export default function UserCard({ user, onConnectionChange, onUserClick }) {
   const [connectionStatus, setConnectionStatus] = useState({
@@ -84,7 +84,9 @@ export default function UserCard({ user, onConnectionChange, onUserClick }) {
           width: 64,
           height: 64,
           mr: 2.5,
-          border: '2px solid #e0e0e0'
+          border: '2px solid #e0e0e0',
+          '& img': {
+          transform: 'scale(1.02)'}
         }}
       />
       <CardContent sx={{ flex: 1, py: 0, px: 0 }}>

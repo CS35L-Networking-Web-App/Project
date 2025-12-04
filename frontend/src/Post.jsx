@@ -9,8 +9,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ReplyIcon from '@mui/icons-material/Reply';
 import EditIcon from '@mui/icons-material/Edit';
 import { toggleLikePost, addComment, deletePost, deleteComment, replyToComment, updatePost } from './api.js';
-import default_pfp from './assets/default_pfp.svg';
-
+const default_pfp = "https://cpng.pikpng.com/pngl/s/80-805068_my-profile-icon-blank-profile-picture-circle-clipart.png"
 
 function LikeButton(props){
 
@@ -203,7 +202,7 @@ function Post(props){
             <Box key={comment.id} sx={{ display: 'flex', mb: 2, alignItems: 'flex-start', ml: depth > 0 ? 6 : 0 }}>
                 <Avatar
                     src={comment.author?.profilePicture || default_pfp}
-                    sx={{ width: 36, height: 36, mr: 1.5 }}
+                    sx={{ width: 36, height: 36, mr: 1.5,'& img': {transform: 'scale(1.02)'}}}
                 />
                 <Box sx={{ flex: 1 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>

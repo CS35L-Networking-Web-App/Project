@@ -4,8 +4,8 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { getUserById, sendConnectionRequest, getPosts, acceptConnectionRequest } from './api.js';
 import { getButtonConfig } from './utilities.jsx';
 import Post from './Post';
-import default_pfp from './assets/default_pfp.svg';
 import './styles.css';
+const default_pfp = "https://cpng.pikpng.com/pngl/s/80-805068_my-profile-icon-blank-profile-picture-circle-clipart.png"
 
 export default function UserProfile({ userId, onBack, currentUserId, onConnectionChange }) {
   const [user, setUser] = useState(null);
