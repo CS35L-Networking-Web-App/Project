@@ -46,10 +46,16 @@ A student/alumni networking app with authentication, profiles, posting, comments
 ## Environment Variables
 
 Create a `.env` file in **backend/**:
+```env
+PORT=4000
+JWT_SECRET=YOUROWNSECRETWORD
+```
 
 
 Create a `.env` file in **frontend/** with:
+```env
 VITE_API_BASE_URL=http://localhost:4000
+```
 
 ## Install:
 Run `setup.sh` for a one-step setup. If you prefer doing it manually, run the following commands from the repo root:
@@ -58,7 +64,7 @@ cd backend && npm install
 cd ../frontend && npm install
 cd ..
 ```
-
+---
 ## Run(dev):
 At repo root:
 ```bash
@@ -66,7 +72,7 @@ At repo root:
 ```
 
 This starts Backend on http://localhost:4000 and Frontend on http://localhost:5173
-
+---
 ## Tests:
 We use Playwright E2E tests:
 
