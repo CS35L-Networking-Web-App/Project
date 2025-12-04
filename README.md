@@ -58,7 +58,11 @@ VITE_API_BASE_URL=http://localhost:4000
 ```
 
 ## Install:
-Run `setup.sh` for a one-step setup. If you prefer doing it manually, run the following commands from the repo root:
+Run 
+```bash
+./setup.sh
+``` 
+for a one-step setup. If you prefer doing it manually, run the following commands from the repo root:
 ```bash
 cd backend && npm install
 cd ../frontend && npm install
@@ -72,6 +76,7 @@ At repo root:
 ```
 
 This starts Backend on http://localhost:4000 and Frontend on http://localhost:5173
+
 ---
 ## Tests:
 We use Playwright E2E tests:
