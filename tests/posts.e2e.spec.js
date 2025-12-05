@@ -26,6 +26,7 @@ async function signIn(page, { email, password }) {
 
 async function cleanupTestPosts(page, { email, password }) {
   try {
+    if (page.isClosed()) return;
     await page.goto(`${BASE_URL}/`);
     await page.getByLabel('Email', { exact: true }).fill(email);
     await page.getByLabel('Password', { exact: true }).first().fill(password);
@@ -39,10 +40,11 @@ async function cleanupTestPosts(page, { email, password }) {
   page.on('dialog', d => d.accept().catch(() => {}));
 
   for (let i = 0; i < 5; i++) { // safety cap
+    if (page.isClosed()) break;
     const postCard = page.locator('div.container').filter({ hasText: POST_PREFIX }).first();
-    const count = await postCard.count();
+    const count = await postCard.count().catch(() => 0);
     if (count === 0) break;
-    await postCard.locator('button:has([data-testid="DeleteIcon"])').first().click();
+    await postCard.locator('button:has([data-testid="DeleteIcon"])').first().click().catch(() => {});
     await page.waitForTimeout(300);
   }
 }
@@ -54,60 +56,78 @@ test('post lifecycle across home/search/profile with interactions', async ({ pag
   const postText = `${POST_PREFIX} ${Date.now()}`;
   const commentText = `E2E comment ${Date.now()}`;
   const replyText = `E2E reply ${Date.now()}`;
+  let contextB;
 
   try {
-    // Create account and login
+    // User A creates account and post
     await signUp(page, { name, email, password });
     await signIn(page, { email, password });
-
-    // Create post
     await page.getByPlaceholder('What do you want to share?').fill(postText);
     await page.getByRole('button', { name: 'Post', exact: true }).click();
     await expect(page.getByText(postText, { exact: false })).toBeVisible();
-
-    // Scope to the post container
     const postCard = page.locator('div.container').filter({ hasText: postText }).first();
 
-    // Like and unlike
+    // Like/unlike by author
     await postCard.getByRole('button', { name: /Like/ }).click();
     await expect(postCard.getByRole('button', { name: /Liked/ })).toBeVisible();
     await postCard.getByRole('button', { name: /Liked/ }).click();
     await expect(postCard.getByRole('button', { name: /^Like/ })).toBeVisible();
 
-    // Open comments and add comment
-    await postCard.getByRole('button', { name: /Comment/ }).click();
-    await postCard.getByPlaceholder('Write a comment...').fill(commentText);
-    await postCard.getByRole('button', { name: /^Post$/ }).click();
-    const commentRow = postCard.locator('div').filter({ hasText: commentText }).first();
-    await expect(commentRow).toBeVisible();
+    // Create user B in new context
+    contextB = await page.context().browser().newContext();
+    const pageB = await contextB.newPage();
+    const emailB = `e2e+b${Date.now()}@example.com`;
+    const nameB = 'Commenter B';
+    await signUp(pageB, { name: nameB, email: emailB, password });
+    await signIn(pageB, { email: emailB, password });
 
-    // Reply to comment
-    const replyButtons = commentRow.getByRole('button', { name: /^Reply$/ });
-    await replyButtons.first().click(); // toggle reply box
-    await commentRow.getByPlaceholder('Write a reply...').fill(replyText);
-    await replyButtons.nth(1).click(); // submit reply
-    await expect(commentRow.getByText(replyText, { exact: false })).toBeVisible();
+    // B finds the post and comments
+    const postCardB = pageB.locator('div.container').filter({ hasText: postText }).first();
+    await postCardB.getByRole('button', { name: /Comment/ }).click();
+    await postCardB.getByPlaceholder('Write a comment...').fill(commentText);
+    await postCardB.getByRole('button', { name: /^Post$/ }).click();
+    const commentRowB = postCardB.locator('div').filter({ hasText: commentText }).first();
+    await expect(commentRowB).toBeVisible();
 
-    // Delete parent comment (will leave placeholder and keep reply)
-    page.once('dialog', d => d.accept());
-    await commentRow.locator('button').first().click();
-    await expect(postCard.getByText('This comment has been deleted', { exact: false })).toBeVisible();
-    await expect(postCard.getByText(replyText, { exact: false })).toBeVisible();
+    // B replies twice to build nesting
+    const replyButtons = commentRowB.getByRole('button', { name: /^Reply$/ });
+    await replyButtons.first().click();
+    await commentRowB.getByPlaceholder('Write a reply...').fill(replyText + ' lvl1');
+    await replyButtons.nth(1).click();
+    await expect(commentRowB.getByText(replyText + ' lvl1', { exact: false })).toBeVisible();
 
-    // Delete post
+    // reply to the reply (nesting)
+    const nestedReply = postCardB.getByText(replyText + ' lvl1').locator('..'); // find parent block
+    await postCardB.getByRole('button', { name: /Reply/, exact: false }).last().click();
+    await postCardB.getByPlaceholder('Write a reply...').last().fill(replyText + ' lvl2');
+    await postCardB.getByRole('button', { name: 'Reply' }).last().click();
+    await expect(postCardB.getByText(replyText + ' lvl2', { exact: false })).toBeVisible();
+
+    // B cannot delete A's post
+    await expect(postCardB.locator('.header button:has([data-testid="DeleteIcon"])')).toHaveCount(0);
+
+    // B deletes own parent comment; placeholder remains, nested reply stays
+    pageB.once('dialog', d => d.accept());
+    await commentRowB.locator('button').first().click();
+    await expect(postCardB.getByText('This comment has been deleted', { exact: false })).toBeVisible();
+    await expect(postCardB.getByText('lvl2', { exact: false })).toBeVisible();
+
+    // Back to A: delete post, ensure removal everywhere
     page.once('dialog', d => d.accept());
     await postCard.locator('button:has([data-testid="DeleteIcon"])').first().click();
     await expect(page.getByText(postText, { exact: false })).toHaveCount(0);
 
-    // Verify not in Search > Posts
     await page.getByRole('tab', { name: 'Search' }).click();
     await page.getByRole('tab', { name: 'Posts' }).click();
     await expect(page.getByText(postText, { exact: false })).toHaveCount(0);
 
-    // Verify not in My Profile posts
     await page.getByRole('tab', { name: 'My Profile' }).click();
     await expect(page.getByText(postText, { exact: false })).toHaveCount(0);
+
   } finally {
+    if (contextB) {
+      await contextB.close().catch(() => {});
+    }
     await cleanupTestPosts(page, { email, password });
   }
 });

@@ -86,4 +86,4 @@ We use Playwright E2E tests:
 npm install -D @playwright/test
 npx playwright install
 ```
-2. Ensure the frontend/backend are running, and run tests.
+2. Ensure the frontend/backend are running, and run tests. (If you fail on the tests, try to restart the app.)

@@ -5,9 +5,10 @@
 import { test, expect } from '@playwright/test';
 
 const BASE_URL = process.env.E2E_BASE_URL || 'http://localhost:5173';
+const API_BASE = process.env.E2E_API_BASE || 'http://localhost:4000';
 
 test.describe('Auth flow', () => {
-  test('sign up then sign in and reach home', async ({ page }) => {
+  test('sign up then sign in and reach home with profile update', async ({ page }) => {
     const email = `e2e+${Date.now()}@example.com`;
     const password = 'Password123!';
     const name = 'E2E Tester';
@@ -24,13 +25,29 @@ test.describe('Auth flow', () => {
     await page.waitForURL('**/');
 
     // Sign in
-    await page.getByLabel('Email').fill(email);
-    await page.getByLabel('Password').fill(password);
+    await page.getByLabel('Email', { exact: true }).fill(email);
+    await page.getByLabel('Password', { exact: true }).first().fill(password);
     await page.getByRole('button', { name: 'Sign in', exact: true }).click();
 
     // Expect landing on home
     await page.waitForURL('**/home');
     await expect(page.getByRole('tab', { name: 'Home' })).toBeVisible();
+
+    // Update profile via UI
+    const newAbout = 'E2E updated about me text';
+    const newLocation = 'E2E City';
+    await page.getByRole('tab', { name: 'My Profile' }).click();
+    const dialog = page.getByRole('dialog');
+    await page.locator('button:has([data-testid="EditOutlinedIcon"])').first().click();
+    await dialog.getByLabel('About (optional)').fill(newAbout);
+    await dialog.getByLabel('Location (optional)').fill(newLocation);
+    await dialog.getByRole('button', { name: 'Save' }).click();
+    await expect(dialog).toBeHidden({ timeout: 10000 });
+
+    const aboutBlock = page.locator('.container').filter({ hasText: 'About' }).locator('.regular', { hasText: newAbout });
+    const locationBlock = page.locator('.regular', { hasText: newLocation });
+    await expect(aboutBlock).toBeVisible({ timeout: 15000 });
+    await expect(locationBlock).toBeVisible({ timeout: 15000 });
   });
 
   test('unauthenticated user is prompted to sign in on protected page', async ({ page }) => {

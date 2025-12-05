@@ -252,6 +252,8 @@ function Home() {
       setValue(3);
       setViewingUserId(null);
     } else {
+      // Always view others in the Home tab profile view for consistent layout
+      setValue(0);
       setViewingUserId(userId);
     }
   };
