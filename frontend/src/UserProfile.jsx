@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Box, Stack, IconButton, CircularProgress, Typography, Button } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { useNavigate } from 'react-router-dom'; 
 import { getUserById, sendConnectionRequest, getPosts, acceptConnectionRequest } from './api.js';
 import { getButtonConfig } from './utilities.jsx';
 import Post from './Post';
@@ -18,6 +19,8 @@ export default function UserProfile({ userId, onBack, currentUserId, onConnectio
     hasReceivedRequest: false
   });
   const [connectLoading, setConnectLoading] = useState(false);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     async function loadUserProfile() {
@@ -129,6 +132,10 @@ export default function UserProfile({ userId, onBack, currentUserId, onConnectio
      );
     };
 
+    const handleMessageClick = () => {
+      navigate(`/messages?user=${userId}`);
+    };
+
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
@@ -183,8 +190,18 @@ export default function UserProfile({ userId, onBack, currentUserId, onConnectio
                   {user.location && ` • ${user.location}`}
                 </div>
 
-                <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center' }}>
+                <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center', gap: 1 }}>
                   {getConnectionButton()}
+                  {userId !== currentUserId && (
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      sx={{ textTransform: 'none', fontWeight: 600 }}
+                      onClick={handleMessageClick}
+                    >
+                      Message
+                    </Button>
+                  )}
                 </Box>
               </div>
             </div>

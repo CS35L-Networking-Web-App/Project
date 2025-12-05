@@ -5,6 +5,7 @@ import mongoose from 'mongoose';
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
 import postRoutes from './routes/posts.js';
+import messageRoutes from './routes/messages.js';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 
 const app = express();
@@ -29,6 +30,9 @@ app.use('/api/users', userRoutes);
 
 // post routes
 app.use('/api/posts', postRoutes);
+
+// message routes
+app.use('/api/messages', messageRoutes);
 
 // error handling
 app.use((err, req, res, next) => {

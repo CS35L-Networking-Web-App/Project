@@ -356,6 +356,15 @@ function Home() {
           <Tab icon={<PersonIcon/>} label="My Profile" iconPosition="start" />
         </Tabs>
         <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 1 }}>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={() => navigate('/messages')}
+            sx={{ textTransform: 'none', fontWeight: 600}}
+          >
+            Messages
+          </Button>
+
           <Notifications onRequestAccepted={handleConnectionChange} updateNotifs={updateNotifs} onRequestRejected={loadUsers} />
           <IconButton
             onClick={handleAccountMenuOpen}

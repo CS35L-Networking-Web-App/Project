@@ -511,3 +511,70 @@ export async function deletePost(postId) {
 
   return res.json();
 }
+
+
+// Direct Messages
+export async function getConversations() {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    throw new Error('Not authenticated');
+  }
+
+  const res = await fetch(`${API_BASE}/api/messages/conversations`, {
+    method: "GET",
+    headers: {
+      "Authorization": `Bearer ${token}`
+    }
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => null);
+    throw new Error(extractErrorMessage(err, "Failed to fetch conversations"));
+  }
+
+  return res.json(); // { conversations: [...] }
+}
+
+export async function getMessagesWith(userId) {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    throw new Error('Not authenticated');
+  }
+
+  const res = await fetch(`${API_BASE}/api/messages/${userId}`, {
+    method: "GET",
+    headers: {
+      "Authorization": `Bearer ${token}`
+    }
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => null);
+    throw new Error(extractErrorMessage(err, "Failed to fetch messages"));
+  }
+
+  return res.json(); // { messages: [...] }
+}
+
+export async function sendMessageTo(userId, text) {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    throw new Error('Not authenticated');
+  }
+
+  const res = await fetch(`${API_BASE}/api/messages/${userId}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    },
+    body: JSON.stringify({ text }),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => null);
+    throw new Error(extractErrorMessage(err, "Failed to send message"));
+  }
+
+  return res.json(); // { message: {...} }
+}
