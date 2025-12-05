@@ -23,7 +23,7 @@ const default_pfp = "https://cpng.pikpng.com/pngl/s/80-805068_my-profile-icon-bl
 function Home() {
   document.body.style.backgroundColor = '#f5f7fa';
   const navigate = useNavigate();
-  const [value, setValue] = useState(0);
+  const [tab, setTab] = useState(0);
   const [user, setUser] = useState(null);
   const [allUsers, setAllUsers] = useState([]);
   const [connections, setConnections] = useState([]);
@@ -39,14 +39,14 @@ function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [viewingUserId, setViewingUserId] = useState(null);
   const [accountMenuAnchor, setAccountMenuAnchor] = useState(null);
-  const [innerTab, setInnerTab] = useState(0);
+  const [innerSearchTab, setInnerSearchTab] = useState(0);
   const [innerHomeTab, setInnerHomeTab] = useState(0);
   const [updateNotifs, setUpdateNotifs] = useState(0);
   const [connectionsPostsLoading, setConnectionsPostsLoading] = useState(false);
   const [connectionsPosts, setConnectionsPosts] = useState([]);
 
   const handleChange = (event, newValue) => {
-    setValue(newValue);
+    setTab(newValue);
     setViewingUserId(null); // Clear viewing user when switching tabs
   };
 
@@ -64,7 +64,7 @@ function Home() {
   };
 
   const handleLogoClick = () => {
-    setValue(0);
+    setTab(0);
     setViewingUserId(null);
   };
 
@@ -84,7 +84,7 @@ function Home() {
 
   useEffect(() => {
     async function loadPosts() {
-      if (value === 0 && innerHomeTab===0){ // Home tab is 0
+      if (tab === 0 && innerHomeTab===0){ // Home tab is 0
         setPostsLoading(true);
         try {
           const data = await getPosts('');
@@ -97,7 +97,7 @@ function Home() {
       }
     }
     loadPosts();
-  }, [value, innerHomeTab]);
+  }, [tab, innerHomeTab]);
 
     useEffect(() => {
       async function loadConnectionsPosts() {
@@ -112,14 +112,14 @@ function Home() {
         }
       }
       
-    if (value === 0 && innerHomeTab === 1){
+    if (tab === 0 && innerHomeTab === 1){
       loadConnectionsPosts();
     }  
-  }, [value, innerHomeTab]);
+  }, [tab, innerHomeTab]);
 
   useEffect(() => {
     async function loadProfilePosts() {
-      if (value === 3) {
+      if (tab === 3) {
         setProfilePostsLoading(true);
         try {
           const data = await getPosts('');
@@ -133,7 +133,7 @@ function Home() {
       }
     }
     loadProfilePosts();
-  }, [value, user?.id]);
+  }, [tab, user?.id]);
 
   useEffect(() => {
     async function loadUsers() {
@@ -160,19 +160,19 @@ function Home() {
         }
       }
         
-    if (value === 2 && innerTab === 0){ 
+    if (tab === 2 && innerSearchTab === 0){ 
       loadUsers();
     }
 
-    if (value === 2 && innerTab === 1){ 
+    if (tab === 2 && innerSearchTab === 1){ 
       loadFoundPosts();
     }
-  }, [value, innerTab, searchQuery]);
+  }, [tab, innerSearchTab, searchQuery]);
 
 
   useEffect(() => {
     async function loadConnections() {
-      if (value === 1) { // My Network tab
+      if (tab === 1) { // My Network tab
         setConnectionsLoading(true);
         try {
           const data = await getConnections();
@@ -185,11 +185,11 @@ function Home() {
       }
     }
     loadConnections();
-  }, [value, innerHomeTab]);
+  }, [tab, innerHomeTab]);
 
   const handleConnectionChange = () => {
     // Reload connections when a new connection is made
-    if (value === 1) {
+    if (tab === 1) {
       async function reloadConnections() {
       try {
         const data = await getConnections();
@@ -201,11 +201,11 @@ function Home() {
     reloadConnections();
     }
 
-    if(value === 0){
+    if(tab === 0){
       setUpdateNotifs(prev => !prev);
     }
-    
-     if (value === 0 && innerHomeTab === 1){
+
+     if (tab === 0 && innerHomeTab === 1){
       async function loadConnectionsPosts() {
         setConnectionsPostsLoading(true);
         try {
@@ -220,7 +220,7 @@ function Home() {
       loadConnectionsPosts();
     }
 
-     if(value === 2 && innerTab === 0){ 
+     if(tab === 2 && innerSearchTab === 0){ 
       setUpdateNotifs(prev => !prev);
       async function loadUsers() {
         setUsersLoading(true);
@@ -239,7 +239,7 @@ function Home() {
 
   const handleRequestRejected = () => {
   async function loadUsers() {
-      if (value === 2 && innerTab === 0){
+      if (tab === 2 && innerSearchTab === 0){
         setUsersLoading(true);
         try {
           const data = await getAllUsers(searchQuery);
@@ -259,7 +259,7 @@ function Home() {
     try {
       const data = await getPosts('');
       setPosts(data.posts || []);
-      if (value === 3) {
+      if (tab === 3) {
         const own = (data.posts || []).filter(p => p.author.id === user?.id);
         setProfilePosts(own);
       }
@@ -286,18 +286,18 @@ function Home() {
   const handleUserClick = (userId) => {
     if (user && userId === user.id) {
       // Navigate to my profile tab for self
-      setValue(3);
+      setTab(3);
       setViewingUserId(null);
     } else {
       // Always view others in the Home tab profile view for consistent layout
-      setValue(0);
+      setTab(0);
       setViewingUserId(userId);
     }
   };
 
   const handleBackFromProfile = () => {
     setViewingUserId(null);
-    if (value === 2 && innerTab === 1) {
+    if (tab === 2 && innerSearchTab === 1) {
       // refresh search results if we were on search posts view
       (async () => {
         setFoundPostsLoading(true);
@@ -368,7 +368,7 @@ function Home() {
           <Typography variant="h6" sx={{ fontWeight: 700, color: '#0b3c99' }}>LinkU</Typography>
         </Box>
         <Tabs
-          value={value}
+          value={tab}
           onChange={handleChange}
           sx={{
             '& .MuiTab-root': {
@@ -440,7 +440,7 @@ function Home() {
         </Box>
       </Box>
         <Box sx={{ maxWidth: viewingUserId ? 1200 : 800, margin: '0 auto' }}>
-        <TabPanel value={value} index={0}>
+        <TabPanel value={tab} index={0}>
         {viewingUserId ? (
           <UserProfile userId={viewingUserId} onBack={handleBackFromProfile} currentUserId={user?.id} onConnectionChange={handleConnectionChange}/>
         ) : (
@@ -542,7 +542,7 @@ function Home() {
         )}
       </TabPanel>
        </Box>
-      <TabPanel value={value} index={1}>
+      <TabPanel value={tab} index={1}>
         <Box sx={{ maxWidth: 800, margin: '0 auto' }}>
         {viewingUserId ? (
           <UserProfile userId={viewingUserId} onBack={handleBackFromProfile} currentUserId={user?.id} />
@@ -575,7 +575,7 @@ function Home() {
         )}
         </Box>
       </TabPanel>
-      <TabPanel value={value} index={2}>
+      <TabPanel value={tab} index={2}>
         {viewingUserId ? (
           <UserProfile userId={viewingUserId} onBack={handleBackFromProfile} onConnectionChange={handleConnectionChange} currentUserId={user?.id} />
         ) : (
@@ -583,7 +583,7 @@ function Home() {
             <Box sx={{ mb: 3 }}>
               <TextField
                 fullWidth
-                placeholder={innerTab === 0 ? 'Search for users by name, email, or position...' : 'Search for posts by content or author name...'}
+                placeholder={innerSearchTab === 0 ? 'Search for users by name, email, or position...' : 'Search for posts by content or author name...'}
                 value={searchQuery}
                 size="medium"
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -610,11 +610,11 @@ function Home() {
                 }}
               />
             </Box>
-          <Tabs value={innerTab} onChange={(e, newVal) => {setInnerTab(newVal)}} sx={{ mb:2, '& .MuiTab-root': {textTransform: 'none', fontSize: '15px',}}}>
+          <Tabs value={innerSearchTab} onChange={(e, newVal) => {setInnerSearchTab(newVal)}} sx={{ mb:2, '& .MuiTab-root': {textTransform: 'none', fontSize: '15px',}}}>
           <Tab label="Users" />
           <Tab label="Posts"/>
           </Tabs>
-          <TabPanel value={innerTab} index={0}>
+          <TabPanel value={innerSearchTab} index={0}>
             {usersLoading ? (
               <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
                 <CircularProgress />
@@ -637,7 +637,7 @@ function Home() {
               ))
             )}
           </TabPanel>
-          <TabPanel value={innerTab} index={1}>
+          <TabPanel value={innerSearchTab} index={1}>
             {foundPostsLoading ? (
               <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
                 <CircularProgress />
@@ -672,7 +672,7 @@ function Home() {
           </Box>
          )}
       </TabPanel>
-      <TabPanel value={value} index={3}>
+      <TabPanel value={tab} index={3}>
         <Box sx={{ maxWidth: 1200, margin: '0 auto' }}>
           <Stack direction="row" spacing={4} alignItems={'flex-start'}>
             <Profile
