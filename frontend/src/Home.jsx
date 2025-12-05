@@ -99,17 +99,8 @@ function Home() {
     loadPosts();
   }, [value, innerHomeTab]);
 
-  async function loadConnectionsPosts() {
-      if (value === 0 && innerHomeTab === 1){ // Home tab is 0
-        setConnectionsLoading(true);
-        try {
-          const data = await getConnections();
-          setConnections(data.connections || []);
-        } catch (err) {
-          console.error('Failed to load connections:', err);
-        } finally {
-          setConnectionsLoading(false);
-        }
+    useEffect(() => {
+      async function loadConnectionsPosts() {
         setConnectionsPostsLoading(true);
         try {
           const data = await getConnectionsPosts();
@@ -120,10 +111,10 @@ function Home() {
           setConnectionsPostsLoading(false);
         }
       }
-    }
-
-    useEffect(() => {
-    loadConnectionsPosts();
+      
+    if (value === 0 && innerHomeTab === 1){
+      loadConnectionsPosts();
+    }  
   }, [value, innerHomeTab]);
 
   useEffect(() => {
@@ -144,23 +135,20 @@ function Home() {
     loadProfilePosts();
   }, [value, user?.id]);
 
-  async function loadUsers() {
-      if (value === 2 && innerTab === 0){ // Search tab, keep previous searches when switching between tabs
+  useEffect(() => {
+    async function loadUsers() {
         setUsersLoading(true);
         try {
           const data = await getAllUsers(searchQuery);
           setAllUsers(data.users || []);
-            } catch (err) {
-              console.error("Failed to load users:", err);
-             } finally {
-              setUsersLoading(false);
-            }
+          } catch (err) {
+            console.error("Failed to load users:", err);
+          } finally {
+            setUsersLoading(false);
           }
         }
-
-  useEffect(() => {
+    
     async function loadFoundPosts() {
-      if (value === 2 && innerTab === 1){ 
         setFoundPostsLoading(true);
         try {
           const data = await getPosts(searchQuery);
@@ -171,10 +159,16 @@ function Home() {
           setFoundPostsLoading(false);
         }
       }
+        
+    if (value === 2 && innerTab === 0){ 
+      loadUsers();
     }
-    loadFoundPosts();
-    loadUsers();
+
+    if (value === 2 && innerTab === 1){ 
+      loadFoundPosts();
+    }
   }, [value, innerTab, searchQuery]);
+
 
   useEffect(() => {
     async function loadConnections() {
@@ -207,15 +201,58 @@ function Home() {
     reloadConnections();
     }
 
+    if(value === 0){
+      setUpdateNotifs(prev => !prev);
+    }
+    
      if (value === 0 && innerHomeTab === 1){
+      async function loadConnectionsPosts() {
+        setConnectionsPostsLoading(true);
+        try {
+          const data = await getConnectionsPosts();
+          setConnectionsPosts(data.posts || []);
+        } catch (err) {
+          console.error('Failed to load posts:', err);
+        } finally {
+          setConnectionsPostsLoading(false);
+        }
+      }
       loadConnectionsPosts();
-     }
+    }
 
      if(value === 2 && innerTab === 0){ 
       setUpdateNotifs(prev => !prev);
+      async function loadUsers() {
+        setUsersLoading(true);
+        try {
+          const data = await getAllUsers(searchQuery);
+          setAllUsers(data.users || []);
+          } catch (err) {
+            console.error("Failed to load users:", err);
+          } finally {
+            setUsersLoading(false);
+          }
+        }
       loadUsers();
-    }
+     }
   };
+
+  const handleRequestRejected = () => {
+  async function loadUsers() {
+      if (value === 2 && innerTab === 0){
+        setUsersLoading(true);
+        try {
+          const data = await getAllUsers(searchQuery);
+          setAllUsers(data.users || []);
+            } catch (err) {
+              console.error("Failed to load users:", err);
+             } finally {
+              setUsersLoading(false);
+            }
+          }
+        }
+      loadUsers();
+      }
 
   const handlePostCreated = async () => {
     // Reload posts when a new post is created
@@ -365,7 +402,7 @@ function Home() {
             Messages
           </Button>
 
-          <Notifications onRequestAccepted={handleConnectionChange} updateNotifs={updateNotifs} onRequestRejected={loadUsers} />
+          <Notifications onRequestAccepted={handleConnectionChange} updateNotifs={updateNotifs} onRequestRejected={handleRequestRejected} />
           <IconButton
             onClick={handleAccountMenuOpen}
             sx={{
@@ -405,7 +442,7 @@ function Home() {
         <Box sx={{ maxWidth: viewingUserId ? 1200 : 800, margin: '0 auto' }}>
         <TabPanel value={value} index={0}>
         {viewingUserId ? (
-          <UserProfile userId={viewingUserId} onBack={handleBackFromProfile} currentUserId={user?.id} />
+          <UserProfile userId={viewingUserId} onBack={handleBackFromProfile} currentUserId={user?.id} onConnectionChange={handleConnectionChange}/>
         ) : (
           <>
         <Tabs value={innerHomeTab} onChange={(e, newVal) => {setInnerHomeTab(newVal)}} sx={{ mb:1.5, ml:3, display: 'flex', mt:-1, '& .MuiTab-root': {textTransform: 'none', fontSize: '15px'}}}>
