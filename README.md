@@ -92,3 +92,11 @@ npm install -D @playwright/test
 npx playwright install
 ```
 2. Ensure the frontend/backend are running, and run tests. (If you fail on the tests, try to restart the app.)
+
+## Sequence Diagram
+
+![Alt text](SequenceDiagram.jpg)
+
+Diagram Description: When the user types in a search query and is on the tab to view results for users matching the search, the server gets all users matching the search query and the information of the current user from the database. Then a list of users profiles matching the search is displayed, each with a button that shows their connection status with the current user. When the user clicks on the profile of one of the users of the search results, the server gets this user’s profile information, all posts, and all comments from the database, then the posts are filtered to only display posts by this user on the user’s profile page, along with the user’s profile. The user sees the “Accept” button on the other user’s profile, so they know this user has sent them a connection request and they click the button to accept their request. The button changes to show the users are now connected. The server finds this connection request in the database and removes it from the database. The server adds the other user to the current user’s connections list and the current user to the other user’s connections list in the database. Then the server gets the new list of connection requests from the database and the notifications for pending connection requests are updated. 
+
+

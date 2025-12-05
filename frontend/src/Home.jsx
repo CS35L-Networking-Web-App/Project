@@ -84,7 +84,7 @@ function Home() {
 
   useEffect(() => {
     async function loadPosts() {
-      if (value === 0 && innerHomeTab==0){ // Home tab is 0
+      if (value === 0 && innerHomeTab===0){ // Home tab is 0
         setPostsLoading(true);
         try {
           const data = await getPosts('');
@@ -100,7 +100,16 @@ function Home() {
   }, [value, innerHomeTab]);
 
   async function loadConnectionsPosts() {
-      if (value === 0 && innerHomeTab==1){ // Home tab is 0
+      if (value === 0 && innerHomeTab === 1){ // Home tab is 0
+        setConnectionsLoading(true);
+        try {
+          const data = await getConnections();
+          setConnections(data.connections || []);
+        } catch (err) {
+          console.error('Failed to load connections:', err);
+        } finally {
+          setConnectionsLoading(false);
+        }
         setConnectionsPostsLoading(true);
         try {
           const data = await getConnectionsPosts();
@@ -136,7 +145,7 @@ function Home() {
   }, [value, user?.id]);
 
   async function loadUsers() {
-      if (value == 2 && innerTab==0){ // Search tab, keep previous searches when switching between tabs
+      if (value === 2 && innerTab === 0){ // Search tab, keep previous searches when switching between tabs
         setUsersLoading(true);
         try {
           const data = await getAllUsers(searchQuery);
@@ -151,7 +160,7 @@ function Home() {
 
   useEffect(() => {
     async function loadFoundPosts() {
-      if (value === 2 && innerTab==1){ 
+      if (value === 2 && innerTab === 1){ 
         setFoundPostsLoading(true);
         try {
           const data = await getPosts(searchQuery);
@@ -169,7 +178,7 @@ function Home() {
 
   useEffect(() => {
     async function loadConnections() {
-      if (value === 1 || (value == 0 && innerHomeTab == 1)) { // My Network tab
+      if (value === 1) { // My Network tab
         setConnectionsLoading(true);
         try {
           const data = await getConnections();
@@ -188,30 +197,21 @@ function Home() {
     // Reload connections when a new connection is made
     if (value === 1) {
       async function reloadConnections() {
-        try {
-          const data = await getConnections();
-          setConnections(data.connections || []);
-        } catch (err) {
-          console.error('Failed to reload connections:', err);
-        }
+      try {
+        const data = await getConnections();
+        setConnections(data.connections || []);
+      } catch (err) {
+        console.error('Failed to reload connections:', err);
       }
-       reloadConnections();
+    }
+    reloadConnections();
     }
 
-     if (value == 0 && innerHomeTab == 1){
-      async function reloadConnections() {
-        try {
-          const data = await getConnections();
-          setConnections(data.connections || []);
-        } catch (err) {
-          console.error('Failed to reload connections:', err);
-        }
-      }
-      reloadConnections();
+     if (value === 0 && innerHomeTab === 1){
       loadConnectionsPosts();
      }
 
-     if(value == 2 && innerTab==0){ 
+     if(value === 2 && innerTab === 0){ 
       setUpdateNotifs(prev => !prev);
       loadUsers();
     }
