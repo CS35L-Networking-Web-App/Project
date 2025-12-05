@@ -391,8 +391,12 @@ function Home() {
           </Menu>
         </Box>
       </Box>
-        <Box sx={{ maxWidth: 800, margin: '0 auto' }}>
+        <Box sx={{ maxWidth: viewingUserId ? 1200 : 800, margin: '0 auto' }}>
         <TabPanel value={value} index={0}>
+        {viewingUserId ? (
+          <UserProfile userId={viewingUserId} onBack={handleBackFromProfile} currentUserId={user?.id} />
+        ) : (
+          <>
         <Tabs value={innerHomeTab} onChange={(e, newVal) => {setInnerHomeTab(newVal)}} sx={{ mb:1.5, ml:3, display: 'flex', mt:-1, '& .MuiTab-root': {textTransform: 'none', fontSize: '15px'}}}>
           <Tab label="New" />
           <Tab label="Connections"/>
@@ -424,7 +428,7 @@ function Home() {
                 name={post.author.name}
                 text={post.text}
                 position={post.author.position}
-                pic={post.author.profilePicture || userPfp}
+                pic={post.author.profilePicture || default_pfp}
                 liked={post.isLiked}
                 likesCount={post.likesCount}
                 comments={post.comments}
@@ -474,7 +478,7 @@ function Home() {
                 name={post.author.name}
                 text={post.text}
                 position={post.author.position}
-                pic={post.author.profilePicture || userPfp}
+                pic={post.author.profilePicture || default_pfp}
                 liked={post.isLiked}
                 likesCount={post.likesCount}
                 comments={post.comments}
@@ -486,6 +490,8 @@ function Home() {
             ))}</Box>
           )}
       </TabPanel>
+      </>
+        )}
       </TabPanel>
        </Box>
       <TabPanel value={value} index={1}>
