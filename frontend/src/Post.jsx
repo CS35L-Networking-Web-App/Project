@@ -76,6 +76,7 @@ function Post(props){
     const [replyTexts, setReplyTexts] = useState({});
     const [replySubmittingId, setReplySubmittingId] = useState(null);
     const [replyVisible, setReplyVisible] = useState({});
+    const authorClickable = !!(props.onAuthorClick && props.authorId);
 
     const handleAddComment = async (e) => {
         e.preventDefault();
@@ -153,6 +154,19 @@ function Post(props){
             alert(err.message);
         } finally {
             setDeleting(false);
+        }
+    };
+
+    const handleAuthorClick = () => {
+        if (authorClickable) {
+            props.onAuthorClick(props.authorId);
+        }
+    };
+
+    const handleAuthorKey = (e) => {
+        if (authorClickable && (e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault();
+            props.onAuthorClick(props.authorId);
         }
     };
 
@@ -287,8 +301,24 @@ return(
     <Box className='container' sx={{mb:2 }}>
 
         <div className='header'>
-        <div className='list_image'> <img  src={props.pic}/> </div>
-        <div className='user'>
+        <div
+          className='list_image'
+          onClick={handleAuthorClick}
+          onKeyDown={handleAuthorKey}
+          role={authorClickable ? 'button' : undefined}
+          tabIndex={authorClickable ? 0 : -1}
+          style={{ cursor: authorClickable ? 'pointer' : 'default' }}
+        >
+          <img  src={props.pic}/>
+        </div>
+        <div
+          className='user'
+          onClick={handleAuthorClick}
+          onKeyDown={handleAuthorKey}
+          role={authorClickable ? 'button' : undefined}
+          tabIndex={authorClickable ? 0 : -1}
+          style={{ cursor: authorClickable ? 'pointer' : 'default' }}
+        >
         <div className='profile_list' style={{fontWeight:600, fontSize:16, margin: 0}}>{props.name}</div>
         <div className='regular' style={{ fontSize:14, color: '#5f6368', margin: 0 }}>{props.position}</div>
         </div>

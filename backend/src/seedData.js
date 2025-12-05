@@ -159,6 +159,35 @@ export async function seedTestData() {
       });
     }
 
+    // Seed some sample connections (mutual)
+    const connectPairs = [
+      [0, 1],
+      [0, 2],
+      [1, 3],
+      [2, 4]
+    ];
+
+    for (const [a, b] of connectPairs) {
+      const userA = createdUsers[a];
+      const userB = createdUsers[b];
+      userA.connections.push(userB._id);
+      userB.connections.push(userA._id);
+      await userA.save();
+      await userB.save();
+    }
+
+    // Seed some pending connection requests
+    const pendingPairs = [
+      [5, 0], // Frank -> Alice
+      [6, 1]  // Grace -> Bob
+    ];
+    for (const [fromIdx, toIdx] of pendingPairs) {
+      const fromUser = createdUsers[fromIdx];
+      const toUser = createdUsers[toIdx];
+      toUser.connectionRequests.push({ from: fromUser._id });
+      await toUser.save();
+    }
+
     console.log(`Seeded ${createdUsers.length} users and ${samplePosts.length} posts`);
     console.log('Test users available with password: Password123!');
   } catch (err) {
