@@ -32,6 +32,11 @@ A student/alumni networking app with authentication, profiles, posting, comments
    - Find users by name / email / position
    - Search posts by text or author
 
+6. **Direct Messaging**
+   - One-to-one private DM between users
+   - Accessible through a Message button on profiles, user cards
+   - Conversation list, message window UI
+
 ---
 
 ## Requirements
