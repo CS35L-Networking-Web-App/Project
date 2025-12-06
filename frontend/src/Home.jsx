@@ -279,7 +279,7 @@ function Home() {
     setPosts((prev) => prev.map((p) => p.id === updatedPost.id ? updatedPost : p));
     setFoundPosts((prev) => prev.map((p) => p.id === updatedPost.id ? updatedPost : p));
     setProfilePosts((prev) => prev.map((p) => p.id === updatedPost.id ? updatedPost : p));
-    setConnectionPosts((prev) => prev.map((p) => p.id === updatedPost.id ? updatedPost : p));
+    setConnectionsPosts((prev) => prev.map((p) => p.id === updatedPost.id ? updatedPost : p));
   };
 
 
