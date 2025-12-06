@@ -1,49 +1,67 @@
-import { useState, useEffect } from 'react'
-import {Box, Stack, CircularProgress, Typography, TextField, InputAdornment, IconButton, Menu, MenuItem, Button} from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
-import Tabs from '@mui/material/Tabs';
-import Tab from '@mui/material/Tab';
-import HomeIcon from '@mui/icons-material/Home';
-import GroupsIcon from '@mui/icons-material/Groups';
-import PersonIcon from '@mui/icons-material/Person';
-import LogoutIcon from '@mui/icons-material/Logout';
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import { useState } from 'react'
+import {Box, Stack, CircularProgress, Typography, Button} from '@mui/material';
 import './styles.css';
 import { TabPanel } from './utilities.jsx';
 import Profile from './Profile'
-import Post from './Post';
-import NewPost from './newPost';
-import UserCard from './UserCard';
-import Notifications from './Notifications';
-import UserProfile from './UserProfile';
-import { getCurrentUser, getAllUsers, getConnections, getPosts, getConnectionsPosts } from './api.js';
 import { useNavigate } from 'react-router-dom';
+import NewPost from './newPost';
+import Post from './Post';
+import HomeTab from './components/HomeTab';
+import NetworkTab from './components/NetworkTab';
+import SearchTab from './components/SearchTab';
+import { AppHeader } from './components/AppHeader';
+import { useCurrentUser } from './hooks/useCurrentUser';
+import { usePostsFeed, useConnectionsPosts, useProfilePosts } from './hooks/usePosts';
+import { useConnections } from './hooks/useConnections';
+import { useUserSearch, usePostSearch } from './hooks/useSearch';
 const default_pfp = "https://cpng.pikpng.com/pngl/s/80-805068_my-profile-icon-blank-profile-picture-circle-clipart.png"
 
 function Home() {
   document.body.style.backgroundColor = '#f5f7fa';
   const navigate = useNavigate();
   const [tab, setTab] = useState(0);
-  const [user, setUser] = useState(null);
-  const [allUsers, setAllUsers] = useState([]);
-  const [connections, setConnections] = useState([]);
-  const [posts, setPosts] = useState([]);
-  const [foundPosts, setFoundPosts] = useState([]);
-  const [profilePosts, setProfilePosts] = useState([]);
-  const [profilePostsLoading, setProfilePostsLoading] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [usersLoading, setUsersLoading] = useState(false);
-  const [connectionsLoading, setConnectionsLoading] = useState(false);
-  const [postsLoading, setPostsLoading] = useState(false);
-  const [foundPostsLoading, setFoundPostsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [viewingUserId, setViewingUserId] = useState(null);
   const [accountMenuAnchor, setAccountMenuAnchor] = useState(null);
   const [innerSearchTab, setInnerSearchTab] = useState(0);
   const [innerHomeTab, setInnerHomeTab] = useState(0);
   const [updateNotifs, setUpdateNotifs] = useState(0);
-  const [connectionsPostsLoading, setConnectionsPostsLoading] = useState(false);
-  const [connectionsPosts, setConnectionsPosts] = useState([]);
+
+  const { user, loading, setUser } = useCurrentUser();
+  const {
+    posts: homePosts,
+    loading: postsLoading,
+    setPosts: setHomePosts,
+    refresh: refreshHomePosts
+  } = usePostsFeed({ enabled: tab === 0 && innerHomeTab === 0, query: '' });
+  const {
+    posts: connectionsPosts,
+    loading: connectionsPostsLoading,
+    setPosts: setConnectionsPosts,
+    refresh: refreshConnectionsPosts
+  } = useConnectionsPosts({ enabled: tab === 0 && innerHomeTab === 1 });
+  const {
+    posts: profilePosts,
+    loading: profilePostsLoading,
+    setPosts: setProfilePosts,
+    refresh: refreshProfilePosts
+  } = useProfilePosts({ enabled: tab === 3, userId: user?.id });
+  const {
+    connections,
+    loading: connectionsLoading,
+    refresh: refreshConnections
+  } = useConnections({ enabled: tab === 1 });
+  const {
+    users: allUsers,
+    loading: usersLoading,
+    refresh: refreshUsers
+  } = useUserSearch({ enabled: tab === 2 && innerSearchTab === 0, query: searchQuery });
+  const {
+    posts: foundPosts,
+    loading: foundPostsLoading,
+    setPosts: setFoundPosts,
+    refresh: refreshFoundPosts
+  } = usePostSearch({ enabled: tab === 2 && innerSearchTab === 1, query: searchQuery });
 
   const handleChange = (event, newValue) => {
     setTab(newValue);
@@ -68,215 +86,49 @@ function Home() {
     setViewingUserId(null);
   };
 
-  useEffect(() => {
-    async function loadUser() {
-      try {
-        const userData = await getCurrentUser();
-        setUser(userData);
-      } catch (err) {
-        console.error('Failed to load user:', err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadUser();
-  }, []);
-
-  useEffect(() => {
-    async function loadPosts() {
-      if (tab === 0 && innerHomeTab===0){ // Home tab is 0
-        setPostsLoading(true);
-        try {
-          const data = await getPosts('');
-          setPosts(data.posts || []);
-        } catch (err) {
-          console.error('Failed to load posts:', err);
-        } finally {
-          setPostsLoading(false);
-        }
-      }
-    }
-    loadPosts();
-  }, [tab, innerHomeTab]);
-
-    useEffect(() => {
-      async function loadConnectionsPosts() {
-        setConnectionsPostsLoading(true);
-        try {
-          const data = await getConnectionsPosts();
-          setConnectionsPosts(data.posts || []);
-        } catch (err) {
-          console.error('Failed to load posts:', err);
-        } finally {
-          setConnectionsPostsLoading(false);
-        }
-      }
-      
-    if (tab === 0 && innerHomeTab === 1){
-      loadConnectionsPosts();
-    }  
-  }, [tab, innerHomeTab]);
-
-  useEffect(() => {
-    async function loadProfilePosts() {
-      if (tab === 3) {
-        setProfilePostsLoading(true);
-        try {
-          const data = await getPosts('');
-          const ownPosts = (data.posts || []).filter(p => p.author.id === user?.id);
-          setProfilePosts(ownPosts);
-        } catch (err) {
-          console.error('Failed to load profile posts:', err);
-        } finally {
-          setProfilePostsLoading(false);
-        }
-      }
-    }
-    loadProfilePosts();
-  }, [tab, user?.id]);
-
-  useEffect(() => {
-    async function loadUsers() {
-        setUsersLoading(true);
-        try {
-          const data = await getAllUsers(searchQuery);
-          setAllUsers(data.users || []);
-          } catch (err) {
-            console.error("Failed to load users:", err);
-          } finally {
-            setUsersLoading(false);
-          }
-        }
-    
-    async function loadFoundPosts() {
-        setFoundPostsLoading(true);
-        try {
-          const data = await getPosts(searchQuery);
-          setFoundPosts(data.posts || []);
-        } catch (err) {
-          console.error('Failed to load posts:', err);
-        } finally {
-          setFoundPostsLoading(false);
-        }
-      }
-        
-    if (tab === 2 && innerSearchTab === 0){ 
-      loadUsers();
-    }
-
-    if (tab === 2 && innerSearchTab === 1){ 
-      loadFoundPosts();
-    }
-  }, [tab, innerSearchTab, searchQuery]);
-
-
-  useEffect(() => {
-    async function loadConnections() {
-      if (tab === 1) { // My Network tab
-        setConnectionsLoading(true);
-        try {
-          const data = await getConnections();
-          setConnections(data.connections || []);
-        } catch (err) {
-          console.error('Failed to load connections:', err);
-        } finally {
-          setConnectionsLoading(false);
-        }
-      }
-    }
-    loadConnections();
-  }, [tab, innerHomeTab]);
-
   const handleConnectionChange = () => {
-    // Reload connections when a new connection is made
     if (tab === 1) {
-      async function reloadConnections() {
-      try {
-        const data = await getConnections();
-        setConnections(data.connections || []);
-      } catch (err) {
-        console.error('Failed to reload connections:', err);
-      }
-    }
-    reloadConnections();
+      refreshConnections(true);
     }
 
-    if(tab === 0){
+    if (tab === 0) {
       setUpdateNotifs(prev => !prev);
     }
 
-     if (tab === 0 && innerHomeTab === 1){
-      async function loadConnectionsPosts() {
-        setConnectionsPostsLoading(true);
-        try {
-          const data = await getConnectionsPosts();
-          setConnectionsPosts(data.posts || []);
-        } catch (err) {
-          console.error('Failed to load posts:', err);
-        } finally {
-          setConnectionsPostsLoading(false);
-        }
-      }
-      loadConnectionsPosts();
+    if (tab === 0 && innerHomeTab === 1) {
+      refreshConnectionsPosts(true);
     }
 
-     if(tab === 2 && innerSearchTab === 0){ 
+    if (tab === 2 && innerSearchTab === 0) {
       setUpdateNotifs(prev => !prev);
-      async function loadUsers() {
-        setUsersLoading(true);
-        try {
-          const data = await getAllUsers(searchQuery);
-          setAllUsers(data.users || []);
-          } catch (err) {
-            console.error("Failed to load users:", err);
-          } finally {
-            setUsersLoading(false);
-          }
-        }
-      loadUsers();
-     }
+      refreshUsers(true);
+    }
   };
 
   const handleRequestRejected = () => {
-  async function loadUsers() {
-      if (tab === 2 && innerSearchTab === 0){
-        setUsersLoading(true);
-        try {
-          const data = await getAllUsers(searchQuery);
-          setAllUsers(data.users || []);
-            } catch (err) {
-              console.error("Failed to load users:", err);
-             } finally {
-              setUsersLoading(false);
-            }
-          }
-        }
-      loadUsers();
-      }
+    if (tab === 2 && innerSearchTab === 0) {
+      refreshUsers(true);
+    }
+  }
 
   const handlePostCreated = async () => {
-    // Reload posts when a new post is created
-    try {
-      const data = await getPosts('');
-      setPosts(data.posts || []);
-      if (tab === 3) {
-        const own = (data.posts || []).filter(p => p.author.id === user?.id);
-        setProfilePosts(own);
-      }
-    } catch (err) {
-      console.error('Failed to reload posts:', err);
-    }
+    await Promise.all([
+      refreshHomePosts(true),
+      refreshConnectionsPosts(true),
+      refreshProfilePosts(true),
+      refreshFoundPosts(true)
+    ]);
   };
 
   const handlePostDeleted = (postId) => {
-    setPosts((prev) => prev.filter((p) => p.id !== postId));
+    setHomePosts((prev) => prev.filter((p) => p.id !== postId));
     setFoundPosts((prev) => prev.filter((p) => p.id !== postId));
     setProfilePosts((prev) => prev.filter((p) => p.id !== postId));
     setConnectionsPosts((prev) => prev.filter((p) => p.id !== postId));
   };
 
     const handlePostUpdated = (updatedPost) => {
-    setPosts((prev) => prev.map((p) => p.id === updatedPost.id ? updatedPost : p));
+    setHomePosts((prev) => prev.map((p) => p.id === updatedPost.id ? updatedPost : p));
     setFoundPosts((prev) => prev.map((p) => p.id === updatedPost.id ? updatedPost : p));
     setProfilePosts((prev) => prev.map((p) => p.id === updatedPost.id ? updatedPost : p));
     setConnectionsPosts((prev) => prev.map((p) => p.id === updatedPost.id ? updatedPost : p));
@@ -299,17 +151,7 @@ function Home() {
     setViewingUserId(null);
     if (tab === 2 && innerSearchTab === 1) {
       // refresh search results if we were on search posts view
-      (async () => {
-        setFoundPostsLoading(true);
-        try {
-          const data = await getPosts(searchQuery);
-          setFoundPosts(data.posts || []);
-        } catch (err) {
-          console.error('Failed to load posts:', err);
-        } finally {
-          setFoundPostsLoading(false);
-        }
-      })();
+      refreshFoundPosts(true);
     }
   };
 
@@ -347,330 +189,68 @@ function Home() {
   return (
     <Box sx = {{width:'100%'}}>
       <Box>
-      <Box sx={{
-        backgroundColor:'white',
-        borderBottom: '1px solid #e0e0e0',
-        display:'flex',
-        alignItems:'center',
-        top: 0,
-        zIndex: 1000,
-        position:"sticky",
-        justifyContent: 'space-between',
-        px: 3,
-        py: 1,
-        boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-      }}>
-        <Box
-          sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexGrow: 1, cursor: 'pointer' }}
-          onClick={handleLogoClick}
-        >
-          <span className="logo-dot" />
-          <Typography variant="h6" sx={{ fontWeight: 700, color: '#0b3c99' }}>LinkU</Typography>
-        </Box>
-        <Tabs
-          value={tab}
-          onChange={handleChange}
-          sx={{
-            '& .MuiTab-root': {
-              minHeight: 64,
-              textTransform: 'none',
-              fontSize: '15px',
-              fontWeight: 500,
-              color: '#5f6368',
-              '&.Mui-selected': {
-                color: '#0066cc'
-              }
-            },
-            '& .MuiTabs-indicator': {
-              backgroundColor: '#0066cc',
-              height: 3
-            }
-          }}
-        >
-          <Tab icon={<HomeIcon />} label="Home" iconPosition="start" />
-          <Tab icon={<GroupsIcon/>} label="My Network" iconPosition="start" />
-          <Tab icon={<SearchIcon/>} label="Search" iconPosition="start" />
-          <Tab icon={<PersonIcon/>} label="My Profile" iconPosition="start" />
-        </Tabs>
-        <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 1 }}>
-          <Button
-            variant="outlined"
-            size="small"
-            onClick={() => navigate('/messages')}
-            sx={{ textTransform: 'none', fontWeight: 600}}
-          >
-            Messages
-          </Button>
-
-          <Notifications onRequestAccepted={handleConnectionChange} updateNotifs={updateNotifs} onRequestRejected={handleRequestRejected} />
-          <IconButton
-            onClick={handleAccountMenuOpen}
-            sx={{
-              '&:hover': { backgroundColor: '#f5f5f5' }
-            }}
-          >
-            <AccountCircleIcon sx={{ fontSize: 32, color: '#5f6368' }} />
-          </IconButton>
-          <Menu
-            anchorEl={accountMenuAnchor}
-            open={Boolean(accountMenuAnchor)}
-            onClose={handleAccountMenuClose}
-            PaperProps={{
-              sx: {
-                mt: 1,
-                boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-                borderRadius: 2
-              }
-            }}
-          >
-            <MenuItem
-              onClick={handleLogout}
-              sx={{
-                py: 1.5,
-                px: 2,
-                '&:hover': {
-                  backgroundColor: '#f5f5f5'
-                }
-              }}
-            >
-              <LogoutIcon sx={{ mr: 1.5, fontSize: 20 }} />
-              Logout
-            </MenuItem>
-          </Menu>
-        </Box>
-      </Box>
+      <AppHeader
+        tab={tab}
+        onTabChange={handleChange}
+        onLogoClick={handleLogoClick}
+        accountMenuAnchor={accountMenuAnchor}
+        onAccountMenuOpen={handleAccountMenuOpen}
+        onAccountMenuClose={handleAccountMenuClose}
+        onLogout={handleLogout}
+        onMessagesClick={() => navigate('/messages')}
+        onRequestAccepted={handleConnectionChange}
+        onRequestRejected={handleRequestRejected}
+        updateNotifs={updateNotifs}
+      />
         <Box sx={{ maxWidth: viewingUserId ? 1200 : 800, margin: '0 auto' }}>
-        <TabPanel value={tab} index={0}>
-        {viewingUserId ? (
-          <UserProfile userId={viewingUserId} onBack={handleBackFromProfile} currentUserId={user?.id} onConnectionChange={handleConnectionChange}/>
-        ) : (
-          <>
-        <Tabs value={innerHomeTab} onChange={(e, newVal) => {setInnerHomeTab(newVal)}} sx={{ mb:1.5, ml:3, display: 'flex', mt:-1, '& .MuiTab-root': {textTransform: 'none', fontSize: '15px'}}}>
-          <Tab label="New" />
-          <Tab label="Connections"/>
-          </Tabs>
-          <TabPanel value={innerHomeTab} index={0}>
-          <NewPost name={user.name} position={user.position} pic={userPfp} onPostCreated={handlePostCreated} />
-          {postsLoading ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-              <CircularProgress />
-            </Box>
-          ) : posts.length === 0 ? (
-            <Box sx={{
-              textAlign: 'center',
-              p: 6,
-              backgroundColor: 'white',
-              borderRadius: 3,
-              boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
-            }}>
-              <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>No posts yet</Typography>
-              <Typography variant="body2" color="text.secondary">
-                Be the first to share something!
-              </Typography>
-            </Box>
-          ) : (
-            posts.map(post => (
-              <Post
-                key={post.id}
-                postId={post.id}
-                name={post.author.name}
-                text={post.text}
-                position={post.author.position}
-                pic={post.author.profilePicture || default_pfp}
-                liked={post.isLiked}
-                likesCount={post.likesCount}
-                comments={post.comments}
-                authorId={post.author.id}
-                currentUserId={user.id}
-                onUpdate={handlePostUpdated}
-                onDelete={handlePostDeleted}
-                onAuthorClick={handleUserClick}
-              />
-            ))
-          )}
-        </TabPanel>
-        <TabPanel value={innerHomeTab} index={1}>
-          <NewPost name={user.name} position={user.position} pic={userPfp} onPostCreated={handlePostCreated} />
-          {connectionsPostsLoading ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-              <CircularProgress />
-            </Box>
-          ) : connectionsPosts.length === 0 ? (
-           <Box sx={{
-              textAlign: 'center',
-              p: 6,
-              backgroundColor: 'white',
-              borderRadius: 3,
-              boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
-            }}>
-             {connections.length === 0 ? (
-              <>
-            <Typography variant="h6" color="text.secondary">No connections yet</Typography>
-            <Typography variant="body2" color="text.secondary">
-              Search for users and send connection requests to build your network!
-            </Typography>
-            </>
-        ) : ( <>
-              <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>No posts yet</Typography>
-              <Typography variant="body2" color="text.secondary">
-                Your connections haven't posted yet.
-              </Typography>
-              </>
-              )}
-              </Box>):(
-            <Box>
-              {connectionsPosts.map(post => (
-              <Post
-                key={post.id}
-                postId={post.id}
-                name={post.author.name}
-                text={post.text}
-                position={post.author.position}
-                pic={post.author.profilePicture || default_pfp}
-                liked={post.isLiked}
-                likesCount={post.likesCount}
-                comments={post.comments}
-                authorId={post.author.id}
-                currentUserId={user.id}
-                onDelete={handlePostDeleted}
-                onAuthorClick={handleUserClick}
-              />
-            ))}</Box>
-          )}
-      </TabPanel>
-      </>
-        )}
-      </TabPanel>
-       </Box>
-      <TabPanel value={tab} index={1}>
-        <Box sx={{ maxWidth: 800, margin: '0 auto' }}>
-        {viewingUserId ? (
-          <UserProfile userId={viewingUserId} onBack={handleBackFromProfile} currentUserId={user?.id} />
-        ) : connectionsLoading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-            <CircularProgress />
-          </Box>
-        ) : connections.length === 0 ? (
-          <Box sx={{ textAlign: 'center', p: 3 }}>
-            <Typography variant="h6" color="text.secondary">No connections yet</Typography>
-            <Typography variant="body2" color="text.secondary">
-              Search for users and send connection requests to build your network!
-            </Typography>
-          </Box>
-        ) : (
-          connections.map(connection => (
-            <UserCard
-              key={connection.id}
-              user={{
-                ...connection,
-                isConnection: true,
-                hasPendingRequest: false,
-                hasReceivedRequest: false,
-                isSelf: false
-              }}
-              onConnectionChange={handleConnectionChange}
-              onUserClick={handleUserClick}
+          <TabPanel value={tab} index={0}>
+            <HomeTab
+              viewingUserId={viewingUserId}
+              onBackFromProfile={handleBackFromProfile}
+              user={user}
+              userPfp={userPfp}
+              innerHomeTab={innerHomeTab}
+              setInnerHomeTab={setInnerHomeTab}
+              posts={homePosts}
+              postsLoading={postsLoading}
+              connectionsPosts={connectionsPosts}
+              connectionsPostsLoading={connectionsPostsLoading}
+              connections={connections}
+              onPostCreated={handlePostCreated}
+              onPostDeleted={handlePostDeleted}
+              onPostUpdated={handlePostUpdated}
+              onAuthorClick={handleUserClick}
             />
-          ))
-        )}
+          </TabPanel>
         </Box>
+      <TabPanel value={tab} index={1}>
+        <NetworkTab
+          viewingUserId={viewingUserId}
+          onBackFromProfile={handleBackFromProfile}
+          connections={connections}
+          connectionsLoading={connectionsLoading}
+          onConnectionChange={handleConnectionChange}
+          onUserClick={handleUserClick}
+          currentUserId={user?.id}
+        />
       </TabPanel>
       <TabPanel value={tab} index={2}>
-        {viewingUserId ? (
-          <UserProfile userId={viewingUserId} onBack={handleBackFromProfile} onConnectionChange={handleConnectionChange} currentUserId={user?.id} />
-        ) : (
-          <Box sx={{ maxWidth: 800, margin: '0 auto' }}>
-            <Box sx={{ mb: 3 }}>
-              <TextField
-                fullWidth
-                placeholder={innerSearchTab === 0 ? 'Search for users by name, email, or position...' : 'Search for posts by content or author name...'}
-                value={searchQuery}
-                size="medium"
-                onChange={(e) => setSearchQuery(e.target.value)}
-                InputProps={{
-                  startAdornment:(
-                    <InputAdornment position='start'>
-                      <SearchIcon sx={{ color: '#9e9e9e' }} />
-                    </InputAdornment>),
-                }}
-                sx={{
-                  backgroundColor: 'white',
-                  borderRadius: 2,
-                  '& .MuiOutlinedInput-root': {
-                    '& fieldset': {
-                      borderColor: '#e0e0e0'
-                    },
-                    '&:hover fieldset': {
-                      borderColor: '#0066cc'
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#0066cc'
-                    }
-                  }
-                }}
-              />
-            </Box>
-          <Tabs value={innerSearchTab} onChange={(e, newVal) => {setInnerSearchTab(newVal)}} sx={{ mb:2, '& .MuiTab-root': {textTransform: 'none', fontSize: '15px',}}}>
-          <Tab label="Users" />
-          <Tab label="Posts"/>
-          </Tabs>
-          <TabPanel value={innerSearchTab} index={0}>
-            {usersLoading ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-                <CircularProgress />
-              </Box>
-            ) : allUsers.length === 0 ? (
-              <Box sx={{ textAlign: 'center', p: 3 }}>
-                <Typography variant="h6" color="text.secondary">No users found</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {searchQuery.trim() === '' ? 'No users in the system yet' : 'Try searching with different keywords'}
-                </Typography>
-              </Box>
-            ) : (
-              allUsers.map(u => (
-                <UserCard
-                  key={u.id}
-                  user={u}
-                  onConnectionChange={handleConnectionChange}
-                  onUserClick={handleUserClick}
-                />
-              ))
-            )}
-          </TabPanel>
-          <TabPanel value={innerSearchTab} index={1}>
-            {foundPostsLoading ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-                <CircularProgress />
-              </Box>
-            ) : foundPosts.length === 0 ? (
-              <Box sx={{ textAlign: 'center', p: 3 }}>
-                <Typography variant="h6" color="text.secondary">No posts found</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {searchQuery.trim() === '' ? 'No posts yet' : 'Try searching with different keywords'}
-                </Typography>
-              </Box>
-            ) : (
-              foundPosts.map(post => (
-              <Post
-                key={post.id}
-                postId={post.id}
-                name={post.author.name}
-                text={post.text}
-                position={post.author.position}
-                pic={post.author.profilePicture || default_pfp}
-                liked={post.isLiked}
-                likesCount={post.likesCount}
-                comments={post.comments}
-                authorId={post.author.id}
-                currentUserId={user.id}
-                onDelete={handlePostDeleted}
-                onAuthorClick={handleUserClick}
-              />
-            ))
-            )}
-          </TabPanel>
-          </Box>
-         )}
+        <SearchTab
+          viewingUserId={viewingUserId}
+          onBackFromProfile={handleBackFromProfile}
+          onConnectionChange={handleConnectionChange}
+          currentUserId={user?.id}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          innerTab={innerSearchTab}
+          setInnerTab={setInnerSearchTab}
+          users={allUsers}
+          usersLoading={usersLoading}
+          posts={foundPosts}
+          postsLoading={foundPostsLoading}
+          onUserClick={handleUserClick}
+          onPostDeleted={handlePostDeleted}
+        />
       </TabPanel>
       <TabPanel value={tab} index={3}>
         <Box sx={{ maxWidth: 1200, margin: '0 auto' }}>
